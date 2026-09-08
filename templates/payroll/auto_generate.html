@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Auto Generate Payroll{% endblock %}
+{% block page_title %}Auto Generate Payroll{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-magic"></i> Auto Generate Payroll</h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> How it works:</h6>
+                    <ul class="mb-0">
+                        <li>Payroll is calculated based on <strong>attendance records</strong> (present, absent, half-day, late)</li>
+                        <li><strong>Approved leaves</strong> are treated as paid days</li>
+                        <li><strong>Bonuses</strong> are awarded based on attendance percentage</li>
+                        <li><strong>Tax</strong> and <strong>deductions</strong> are applied per policy</li>
+                        <li>If a payroll already exists for the employee/month/year, it will be <strong>updated</strong></li>
+                    </ul>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Month</label>
+                            <select name="month" class="form-control">
+                                {% for m in "1,2,3,4,5,6,7,8,9,10,11,12"|make_list %}
+                                {% endfor %}
+                                <option value="1" {% if current_month == 1 %}selected{% endif %}>January</option>
+                                <option value="2" {% if current_month == 2 %}selected{% endif %}>February</option>
+                                <option value="3" {% if current_month == 3 %}selected{% endif %}>March</option>
+                                <option value="4" {% if current_month == 4 %}selected{% endif %}>April</option>
+                                <option value="5" {% if current_month == 5 %}selected{% endif %}>May</option>
+                                <option value="6" {% if current_month == 6 %}selected{% endif %}>June</option>
+                                <option value="7" {% if current_month == 7 %}selected{% endif %}>July</option>
+                                <option value="8" {% if current_month == 8 %}selected{% endif %}>August</option>
+                                <option value="9" {% if current_month == 9 %}selected{% endif %}>September</option>
+                                <option value="10" {% if current_month == 10 %}selected{% endif %}>October</option>
+                                <option value="11" {% if current_month == 11 %}selected{% endif %}>November</option>
+                                <option value="12" {% if current_month == 12 %}selected{% endif %}>December</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Year</label>
+                            <input type="number" name="year" class="form-control" value="{{ current_year }}">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'payroll_list' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-magic"></i> Generate Payroll for All Employees
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Payroll Detail{% endblock %}
+{% block page_title %}Payroll Detail{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    Payroll #{{ payroll.pk }}
+                    {% if payroll.generated_type == 'auto' %}
+                    <span class="badge bg-info ms-2"><i class="fas fa-magic"></i> Auto Generated</span>
+                    {% else %}
+                    <span class="badge bg-secondary ms-2">Manual</span>
+                    {% endif %}
+                </h6>
+                <div>
+                    {% if payroll.status == 'draft' %}
+                    <a href="{% url 'payroll_process' payroll.pk %}" class="btn btn-sm btn-success"><i class="fas fa-check"></i> Process</a>
+                    {% endif %}
+                    <a href="{% url 'salary_slip' payroll.pk %}" class="btn btn-sm btn-info"><i class="fas fa-file-alt"></i> Slip</a>
+                    <a href="{% url 'salary_slip_pdf' payroll.pk %}" class="btn btn-sm btn-danger"><i class="fas fa-file-pdf"></i> PDF</a>
+                    <a href="{% url 'payroll_update' payroll.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> Edit</a>
+                    <a href="{% url 'payroll_delete' payroll.pk %}" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Delete</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6"><strong>Employee:</strong> {{ payroll.employee.employee_id }} - {{ payroll.employee.full_name }}</div>
+                    <div class="col-md-6"><strong>Period:</strong> {{ payroll.get_month_display }} {{ payroll.year }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6"><strong>Status:</strong> <span class="badge bg-{% if payroll.status == 'paid' %}success{% elif payroll.status == 'processed' %}info{% elif payroll.status == 'draft' %}warning{% else %}secondary{% endif %}">{{ payroll.get_status_display }}</span></div>
+                    <div class="col-md-6"><strong>Payment Date:</strong> {{ payroll.payment_date|date:"M d, Y"|default:"-" }}</div>
+                </div>
+                <hr>
+
+                {% if breakdown %}
+                <h6 class="text-info fw-bold mb-3"><i class="fas fa-clipboard-list"></i> Attendance Summary</h6>
+                <div class="row mb-4">
+                    <div class="col-md-2">
+                        <div class="card bg-light text-center p-2">
+                            <small class="text-muted">Working Days</small>
+                            <h5 class="mb-0">{{ breakdown.total_working_days }}</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-success text-white text-center p-2">
+                            <small>Present</small>
+                            <h5 class="mb-0">{{ breakdown.days_present }}</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-danger text-white text-center p-2">
+                            <small>Absent</small>
+                            <h5 class="mb-0">{{ breakdown.days_absent }}</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-warning text-dark text-center p-2">
+                            <small>Half Day</small>
+                            <h5 class="mb-0">{{ breakdown.days_half_day }}</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-info text-white text-center p-2">
+                            <small>Late</small>
+                            <h5 class="mb-0">{{ breakdown.days_late }}</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card bg-secondary text-white text-center p-2">
+                            <small>Leave</small>
+                            <h5 class="mb-0">{{ breakdown.days_approved_leave }}</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <small class="text-muted">Attendance %</small>
+                                <h4 class="text-primary mb-0">{{ breakdown.attendance_percentage }}%</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <small class="text-muted">Per Day Salary</small>
+                                <h4 class="text-success mb-0">${{ breakdown.per_day_salary|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-warning">
+                            <div class="card-body text-center">
+                                <small class="text-muted">Performance Bonus</small>
+                                <h4 class="text-warning mb-0">{{ breakdown.bonus_percentage }}%</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <small class="text-muted">Bonus Amount</small>
+                                <h4 class="text-info mb-0">${{ breakdown.performance_bonus|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="text-primary fw-bold mb-3"><i class="fas fa-calculator"></i> Calculation Breakdown</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-sm table-bordered">
+                        <tr><td><strong>Basic Earned (attendance-based)</strong></td><td class="text-end">${{ breakdown.basic_earned|floatformat:2 }}</td></tr>
+                        <tr><td>Medical Allowance</td><td class="text-end">${{ breakdown.medical_allowance|floatformat:2 }}</td></tr>
+                        <tr><td>Transport Allowance</td><td class="text-end">${{ breakdown.transport_allowance|floatformat:2 }}</td></tr>
+                        <tr><td>House Allowance</td><td class="text-end">${{ breakdown.house_allowance|floatformat:2 }}</td></tr>
+                        <tr><td>Performance Bonus</td><td class="text-end text-success">+${{ breakdown.performance_bonus|floatformat:2 }}</td></tr>
+                        <tr class="table-success"><td><strong>Total Allowances</strong></td><td class="text-end"><strong>${{ breakdown.total_allowances_computed|floatformat:2 }}</strong></td></tr>
+                        <tr><td>Attendance Deduction (absent/half-day)</td><td class="text-end text-danger">-${{ breakdown.attendance_deduction|floatformat:2 }}</td></tr>
+                        <tr><td>Late Deduction</td><td class="text-end text-danger">-${{ breakdown.late_deduction|floatformat:2 }}</td></tr>
+                        <tr><td>Tax</td><td class="text-end text-danger">-${{ breakdown.tax_computed|floatformat:2 }}</td></tr>
+                    </table>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <h6>Basic Salary</h6>
+                                <h4>${{ payroll.basic_salary|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h6>Allowances</h6>
+                                <h4>${{ payroll.allowances|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <h6>Deductions</h6>
+                                <h4>${{ payroll.deductions|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-dark">
+                            <div class="card-body text-center">
+                                <h6>Tax</h6>
+                                <h4>${{ payroll.tax|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card bg-dark text-white">
+                            <div class="card-body text-center">
+                                <h5>Net Salary</h5>
+                                <h2>${{ payroll.net_salary|floatformat:2 }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if payroll.notes %}
+                <div class="mt-3">
+                    <strong>Notes:</strong> {{ payroll.notes }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

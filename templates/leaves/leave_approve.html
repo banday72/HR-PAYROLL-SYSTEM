@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Approve Leave{% endblock %}
+{% block page_title %}Approve Leave Request{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Leave Request Details</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Employee:</strong> {{ leave.employee.employee_id }} - {{ leave.employee.full_name }}</p>
+                <p><strong>Leave Type:</strong> {{ leave.leave_type }}</p>
+                <p><strong>Period:</strong> {{ leave.start_date|date:"M d, Y" }} to {{ leave.end_date|date:"M d, Y" }} ({{ leave.total_days }} days)</p>
+                <p><strong>Reason:</strong> {{ leave.reason }}</p>
+                <hr>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'leave_list' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Submit Decision</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

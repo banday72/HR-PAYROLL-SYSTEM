@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Leaves{% endblock %}
+{% block page_title %}Leave Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <div>
+        <a href="{% url 'leave_list' %}" class="btn btn-{% if not status_filter %}primary{% else %}outline-primary{% endif %} btn-sm">All</a>
+        <a href="{% url 'leave_list' %}?status=pending" class="btn btn-{% if status_filter == 'pending' %}warning{% else %}outline-warning{% endif %} btn-sm">Pending</a>
+        <a href="{% url 'leave_list' %}?status=approved" class="btn btn-{% if status_filter == 'approved' %}success{% else %}outline-success{% endif %} btn-sm">Approved</a>
+        <a href="{% url 'leave_list' %}?status=rejected" class="btn btn-{% if status_filter == 'rejected' %}danger{% else %}outline-danger{% endif %} btn-sm">Rejected</a>
+    </div>
+    <div>
+        {% if not is_employee %}
+        <a href="{% url 'leave_type_list' %}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-list"></i> Leave Types</a>
+        {% endif %}
+        <a href="{% url 'leave_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Apply Leave</a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        {% if not is_employee %}<th>Employee</th>{% endif %}
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leave in leaves %}
+                    <tr>
+                        {% if not is_employee %}
+                        <td>{{ leave.employee.employee_id }} - {{ leave.employee.full_name }}</td>
+                        {% endif %}
+                        <td>{{ leave.leave_type }}</td>
+                        <td>{{ leave.start_date|date:"M d, Y" }}</td>
+                        <td>{{ leave.end_date|date:"M d, Y" }}</td>
+                        <td>{{ leave.total_days }}</td>
+                        <td>{{ leave.reason|truncatewords:5 }}</td>
+                        <td><span class="badge bg-{% if leave.status == 'approved' %}success{% elif leave.status == 'pending' %}warning{% elif leave.status == 'rejected' %}danger{% else %}secondary{% endif %}">{{ leave.get_status_display }}</span></td>
+                        <td>
+                            {% if not is_employee and leave.status == 'pending' %}
+                            <a href="{% url 'leave_approve' leave.pk %}" class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i></a>
+                            {% endif %}
+                            {% if leave.status == 'pending' %}
+                            <a href="{% url 'leave_delete' leave.pk %}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="{% if is_employee %}7{% else %}8{% endif %}" class="text-center">No leave records found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "includes/pagination.html" %}
+    </div>
+</div>
+{% endblock %}

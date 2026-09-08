@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Payroll Summary {{ year }}{% endblock %}
+{% block page_title %}Payroll Summary - {{ year }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card stat-card border-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col me-2">
+                        <div class="text-primary fw-bold text-uppercase mb-1">Total Employees on Payroll</div>
+                        <div class="text-gray-800 h5 mb-0">{{ total_employees_on_payroll }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card stat-card border-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col me-2">
+                        <div class="text-success fw-bold text-uppercase mb-1">Grand Total ({{ year }})</div>
+                        <div class="text-gray-800 h5 mb-0">${{ grand_total|floatformat:2 }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card stat-card border-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col me-2">
+                        <div class="text-info fw-bold text-uppercase mb-1">Months with Payroll</div>
+                        <div class="text-gray-800 h5 mb-0">{{ monthly_summary|length }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Monthly Breakdown - {{ year }}</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Month</th>
+                        <th>Employees</th>
+                        <th>Total Salary</th>
+                        <th>Average Salary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in monthly_summary %}
+                    <tr>
+                        <td>
+                            {% if item.month == 1 %}January{% elif item.month == 2 %}February{% elif item.month == 3 %}March{% elif item.month == 4 %}April{% elif item.month == 5 %}May{% elif item.month == 6 %}June{% elif item.month == 7 %}July{% elif item.month == 8 %}August{% elif item.month == 9 %}September{% elif item.month == 10 %}October{% elif item.month == 11 %}November{% elif item.month == 12 %}December{% endif %}
+                        </td>
+                        <td>{{ item.employee_count }}</td>
+                        <td><strong>${{ item.total_salary|floatformat:2 }}</strong></td>
+                        <td>${{ item.avg_salary|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted">No payroll data for {{ year }}.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

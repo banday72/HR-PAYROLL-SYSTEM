@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <h5 class="text-primary mb-3">Basic Settings</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.working_days_per_month.label }}</label>
+                            {{ form.working_days_per_month }}
+                            <small class="text-muted">{{ form.working_days_per_month.help_text }}</small>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="text-primary mb-3">Deductions</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.use_per_day_salary_for_absent.label }}</label>
+                            <div class="form-check mt-2">
+                                {{ form.use_per_day_salary_for_absent }}
+                                <label class="form-check-label">{{ form.use_per_day_salary_for_absent.help_text }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.absent_deduction_per_day.label }}</label>
+                            {{ form.absent_deduction_per_day }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.half_day_deduction_percent.label }}</label>
+                            {{ form.half_day_deduction_percent }}
+                            <small class="text-muted">% of daily salary</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.late_allowed_per_month.label }}</label>
+                            {{ form.late_allowed_per_month }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.late_deduction_amount.label }}</label>
+                            {{ form.late_deduction_amount }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.tax_rate_percent.label }}</label>
+                            {{ form.tax_rate_percent }}
+                            <small class="text-muted">% of gross salary</small>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="text-primary mb-3">Leave Policy</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.approved_leave_paid.label }}</label>
+                            <div class="form-check mt-2">
+                                {{ form.approved_leave_paid }}
+                                <label class="form-check-label">{{ form.approved_leave_paid.help_text }}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="text-primary mb-3">Performance Bonus</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.performance_bonus_enabled.label }}</label>
+                            <div class="form-check mt-2">
+                                {{ form.performance_bonus_enabled }}
+                                <label class="form-check-label">{{ form.performance_bonus_enabled.help_text }}</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.bonus_100_percent.label }}</label>
+                            {{ form.bonus_100_percent }}
+                            <small class="text-muted">100% attendance</small>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.bonus_95_percent.label }}</label>
+                            {{ form.bonus_95_percent }}
+                            <small class="text-muted">95-99% attendance</small>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.bonus_90_percent.label }}</label>
+                            {{ form.bonus_90_percent }}
+                            <small class="text-muted">90-94% attendance</small>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-bold">{{ form.bonus_below_90_percent.label }}</label>
+                            {{ form.bonus_below_90_percent }}
+                            <small class="text-muted">Below 90%</small>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5 class="text-primary mb-3">Allowances</h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.medical_allowance.label }}</label>
+                            {{ form.medical_allowance }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.transport_allowance.label }}</label>
+                            {{ form.transport_allowance }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">{{ form.house_allowance_percent.label }}</label>
+                            {{ form.house_allowance_percent }}
+                            <small class="text-muted">% of basic salary</small>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">{{ form.is_active.label }}</label>
+                            <div class="form-check mt-2">
+                                {{ form.is_active }}
+                                <label class="form-check-label">Set as active policy for auto payroll generation</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'policy_list' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Policy</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Salary Slip{% endblock %}
+{% block page_title %}Salary Slip{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Salary Slip - {{ payroll.get_month_display }} {{ payroll.year }}</h6>
+                <a href="{% url 'salary_slip_pdf' payroll.pk %}" class="btn btn-danger btn-sm"><i class="fas fa-file-pdf"></i> Download PDF</a>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="text-primary">Employee Details</h5>
+                        <p><strong>Name:</strong> {{ payroll.employee.full_name }}</p>
+                        <p><strong>ID:</strong> {{ payroll.employee.employee_id }}</p>
+                        <p><strong>Designation:</strong> {{ payroll.employee.designation|default:"N/A" }}</p>
+                        <p><strong>Department:</strong> {{ payroll.employee.department|default:"N/A" }}</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h5 class="text-primary">Company Details</h5>
+                        <p><strong>Company:</strong> HR Payroll System</p>
+                        <p><strong>Pay Period:</strong> {{ payroll.get_month_display }} {{ payroll.year }}</p>
+                        <p><strong>Payment Date:</strong> {{ payroll.payment_date|date:"M d, Y"|default:"Pending" }}</p>
+                        {% if payroll.generated_type == 'auto' %}
+                        <p><span class="badge bg-info"><i class="fas fa-magic"></i> Auto Generated</span></p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if breakdown %}
+                <hr>
+                <h6 class="text-info fw-bold mb-3">Attendance Summary</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr><td>Working Days</td><td class="text-end">{{ breakdown.total_working_days }}</td></tr>
+                            <tr><td>Days Present</td><td class="text-end text-success">{{ breakdown.days_present }}</td></tr>
+                            <tr><td>Days Absent</td><td class="text-end text-danger">{{ breakdown.days_absent }}</td></tr>
+                            <tr><td>Half Days</td><td class="text-end text-warning">{{ breakdown.days_half_day }}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr><td>Late Arrivals</td><td class="text-end text-info">{{ breakdown.days_late }}</td></tr>
+                            <tr><td>Holidays</td><td class="text-end">{{ breakdown.days_holiday }}</td></tr>
+                            <tr><td>Approved Leaves</td><td class="text-end text-primary">{{ breakdown.days_approved_leave }}</td></tr>
+                            <tr><td><strong>Attendance %</strong></td><td class="text-end"><strong>{{ breakdown.attendance_percentage }}%</strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <h6 class="text-info fw-bold mb-3">Calculation Breakdown</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr><td>Basic Earned</td><td class="text-end">${{ breakdown.basic_earned|floatformat:2 }}</td></tr>
+                            <tr><td>Medical Allowance</td><td class="text-end">${{ breakdown.medical_allowance|floatformat:2 }}</td></tr>
+                            <tr><td>Transport Allowance</td><td class="text-end">${{ breakdown.transport_allowance|floatformat:2 }}</td></tr>
+                            <tr><td>House Allowance</td><td class="text-end">${{ breakdown.house_allowance|floatformat:2 }}</td></tr>
+                            <tr class="table-success"><td><strong>Performance Bonus ({{ breakdown.bonus_percentage }}%)</strong></td><td class="text-end">+${{ breakdown.performance_bonus|floatformat:2 }}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm">
+                            <tr><td>Attendance Deduction</td><td class="text-end text-danger">-${{ breakdown.attendance_deduction|floatformat:2 }}</td></tr>
+                            <tr><td>Late Deduction</td><td class="text-end text-danger">-${{ breakdown.late_deduction|floatformat:2 }}</td></tr>
+                            <tr><td>Tax</td><td class="text-end text-danger">-${{ breakdown.tax_computed|floatformat:2 }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success fw-bold">Earnings</h6>
+                        <table class="table table-sm">
+                            <tr><td>Basic Salary</td><td class="text-end">${{ payroll.basic_salary|floatformat:2 }}</td></tr>
+                            <tr><td>Allowances</td><td class="text-end">${{ payroll.allowances|floatformat:2 }}</td></tr>
+                            <tr class="table-success fw-bold"><td>Total Earnings</td><td class="text-end">${{ payroll.basic_salary|add:payroll.allowances|floatformat:2 }}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger fw-bold">Deductions</h6>
+                        <table class="table table-sm">
+                            <tr><td>Deductions</td><td class="text-end">${{ payroll.deductions|floatformat:2 }}</td></tr>
+                            <tr><td>Tax</td><td class="text-end">${{ payroll.tax|floatformat:2 }}</td></tr>
+                            <tr class="table-danger fw-bold"><td>Total Deductions</td><td class="text-end">${{ payroll.deductions|add:payroll.tax|floatformat:2 }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <h4 class="text-primary">Net Salary: <strong>${{ payroll.net_salary|floatformat:2 }}</strong></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

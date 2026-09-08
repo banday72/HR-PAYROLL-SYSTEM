@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Process Payroll{% endblock %}
+{% block page_title %}Process Payroll{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                <h4 class="text-info mb-3"><i class="fas fa-cog"></i> Confirm Process</h4>
+                <p>Are you sure you want to process payroll for <strong>{{ payroll.employee }}</strong>?</p>
+                <p class="text-muted">{{ payroll.get_month_display }} {{ payroll.year }} - Net: ${{ payroll.net_salary|floatformat:2 }}</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <a href="{% url 'payroll_detail' payroll.pk %}" class="btn btn-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-info"><i class="fas fa-check"></i> Process</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

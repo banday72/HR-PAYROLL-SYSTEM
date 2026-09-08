@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ employee.full_name }}{% endblock %}
+{% block page_title %}Employee Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-body text-center">
+                {% if employee.profile_picture %}
+                <img src="{{ employee.profile_picture.url }}" alt="{{ employee.full_name }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px; font-size: 2.5rem;">
+                    {{ employee.first_name.0 }}{{ employee.last_name.0 }}
+                </div>
+                {% endif %}
+                <h5>{{ employee.full_name }}</h5>
+                <p class="text-muted">{{ employee.employee_id }}</p>
+                <span class="badge bg-{{ employee.status|yesno:'success,warning,danger' }} fs-6">{{ employee.get_status_display }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Employee Information</h6>
+                <div>
+                    <a href="{% url 'employee_update' employee.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> Edit</a>
+                    <a href="{% url 'employee_delete' employee.pk %}" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Delete</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Employee ID:</strong> {{ employee.employee_id }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Status:</strong> <span class="badge bg-{{ employee.status|yesno:'success,warning,danger' }}">{{ employee.get_status_display }}</span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Email:</strong> {{ employee.email }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Phone:</strong> {{ employee.phone|default:"-" }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Date of Birth:</strong> {{ employee.date_of_birth|default:"-" }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Gender:</strong> {{ employee.get_gender_display|default:"-" }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Department:</strong> {{ employee.department|default:"-" }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Designation:</strong> {{ employee.designation|default:"-" }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Date of Joining:</strong> {{ employee.date_of_joining }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Salary:</strong> ${{ employee.salary|floatformat:2 }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <strong>Address:</strong> {{ employee.address|default:"-" }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

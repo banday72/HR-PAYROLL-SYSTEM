@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Leave Types{% endblock %}
+{% block page_title %}Leave Types{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <h5></h5>
+    <a href="{% url 'leave_type_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Leave Type</a>
+</div>
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Days Per Year</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lt in leave_types %}
+                    <tr>
+                        <td>{{ lt.name }}</td>
+                        <td>{{ lt.days_per_year }}</td>
+                        <td>{{ lt.description|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center">No leave types found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
