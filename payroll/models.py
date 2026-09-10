@@ -107,21 +107,43 @@ class Payroll(models.Model):
         ordering = ['-year', '-month']
 
 
-class BoutiqueItem(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='boutique_items')
-    item_name = models.CharField(max_length=200)
-    item_price = models.DecimalField(max_digits=10, decimal_places=2)
-    purchase_date = models.DateField()
+class BoutiqueProduct(models.Model):
+    name = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.IntegerField(default=0)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} - ${self.price} (Stock: {self.stock})"
+
+    class Meta:
+        ordering = ['name']
+
+
+class BoutiqueIssue(models.Model):
+    product = models.ForeignKey(BoutiqueProduct, on_delete=models.CASCADE, related_name='issues')
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='boutique_issues')
+    quantity = models.IntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    issue_date = models.DateField()
     is_deducted = models.BooleanField(default=False)
     deducted_in_payroll = models.ForeignKey('Payroll', null=True, blank=True, on_delete=models.SET_NULL, related_name='boutique_deductions')
+    issued_by = models.CharField(max_length=100, blank=True, help_text='Boutique manager name')
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.employee.employee_id} - {self.item_name} (${self.item_price})"
+        return f"{self.employee.employee_id} - {self.product.name} x{self.quantity} (${self.total_price})"
+
+    def save(self, *args, **kwargs):
+        self.total_price = self.product.price * self.quantity
+        super().save(*args, **kwargs)
 
     class Meta:
-        ordering = ['-purchase_date']
+        ordering = ['-issue_date']
 
 
 class BudgetLoan(models.Model):

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Issue Items - HR Payroll{% endblock %}
+{% block page_title %}Issue Items{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex gap-3">
+        <div class="card stat-card border-warning" style="min-width:180px">
+            <div class="card-body">
+                <div class="text-xs text-warning fw-bold text-uppercase">Pending Deduction</div>
+                <div class="h5 mb-0 mt-1">${{ total_pending|floatformat:2 }}</div>
+            </div>
+        </div>
+        <div class="card stat-card border-success" style="min-width:180px">
+            <div class="card-body">
+                <div class="text-xs text-success fw-bold text-uppercase">Total Deducted</div>
+                <div class="h5 mb-0 mt-1">${{ total_deducted|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+    <a href="{% url 'boutique_issue_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Issue Item
+    </a>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 fw-bold text-primary"><i class="fas fa-shopping-cart"></i> All Issued Items</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Employee</th>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Total Price</th>
+                        <th>Date</th>
+                        <th>Issued By</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue in issues %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ issue.employee.employee_id }}</strong> - {{ issue.employee.first_name }}</td>
+                        <td>{{ issue.product.name }}</td>
+                        <td>{{ issue.quantity }}</td>
+                        <td><strong>${{ issue.total_price|floatformat:2 }}</strong></td>
+                        <td>{{ issue.issue_date|date:"d M Y" }}</td>
+                        <td>{{ issue.issued_by }}</td>
+                        <td>
+                            {% if issue.is_deducted %}
+                                <span class="badge bg-success">Deducted</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center text-muted">No items issued yet</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if issues.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if issues.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ issues.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                {% for num in issues.paginator.page_range %}
+                <li class="page-item {% if issues.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                {% if issues.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ issues.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

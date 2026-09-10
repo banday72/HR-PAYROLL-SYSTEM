@@ -1,5 +1,5 @@
 from django import forms
-from .models import Payroll, PayrollPolicy, BoutiqueItem, BudgetLoan
+from .models import Payroll, PayrollPolicy, BoutiqueProduct, BoutiqueIssue, BudgetLoan
 from employees.models import Employee
 
 
@@ -73,15 +73,28 @@ class PayrollPolicyForm(forms.ModelForm):
         }
 
 
-class BoutiqueItemForm(forms.ModelForm):
+class BoutiqueProductForm(forms.ModelForm):
     class Meta:
-        model = BoutiqueItem
-        fields = ['employee', 'item_name', 'item_price', 'purchase_date', 'notes']
+        model = BoutiqueProduct
+        fields = ['name', 'price', 'stock', 'description']
         widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Shirt, Laptop, Chair'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'}),
+            'stock': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Product description...'}),
+        }
+
+
+class BoutiqueIssueForm(forms.ModelForm):
+    class Meta:
+        model = BoutiqueIssue
+        fields = ['product', 'employee', 'quantity', 'issue_date', 'issued_by', 'notes']
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-control'}),
             'employee': forms.Select(attrs={'class': 'form-control'}),
-            'item_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Shirt, Laptop, Chair'}),
-            'item_price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'}),
-            'purchase_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'issue_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'issued_by': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Boutique manager name'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Optional notes...'}),
         }
 

@@ -8,8 +8,8 @@ from decimal import Decimal
 from datetime import datetime, date
 from calendar import monthrange
 import csv
-from .models import Payroll, PayrollPolicy, PayrollBreakdown, BoutiqueItem, BudgetLoan
-from .forms import PayrollForm, PayrollFilterForm, PayrollPolicyForm, BoutiqueItemForm, BudgetLoanForm
+from .models import Payroll, PayrollPolicy, PayrollBreakdown, BoutiqueProduct, BoutiqueIssue, BudgetLoan
+from .forms import PayrollForm, PayrollFilterForm, PayrollPolicyForm, BoutiqueProductForm, BoutiqueIssueForm, BudgetLoanForm
 from employees.models import Employee, Department
 from employees.views import get_employee
 from attendance.models import Attendance
@@ -104,8 +104,8 @@ def calculate_auto_payroll(employee, month, year, policy):
 
     gross_salary = basic_earned + total_allowances
 
-    boutique_items = BoutiqueItem.objects.filter(employee=employee, is_deducted=False)
-    boutique_deduction = sum(item.item_price for item in boutique_items)
+    boutique_issues = BoutiqueIssue.objects.filter(employee=employee, is_deducted=False)
+    boutique_deduction = sum(issue.total_price for issue in boutique_issues)
 
     active_loans = BudgetLoan.objects.filter(employee=employee, is_active=True)
     loan_deduction = D('0')
@@ -121,8 +121,8 @@ def calculate_auto_payroll(employee, month, year, policy):
     net_salary = gross_salary - total_deductions - tax
 
     boutique_list = []
-    for item in boutique_items:
-        boutique_list.append({'item_name': item.item_name, 'amount': item.item_price})
+    for issue in boutique_issues:
+        boutique_list.append({'item_name': issue.product.name, 'amount': issue.total_price})
 
     loan_list = []
     for loan in active_loans:
@@ -136,7 +136,7 @@ def calculate_auto_payroll(employee, month, year, policy):
         'deductions': (total_deductions + tax).quantize(D('0.01')),
         'tax': tax.quantize(D('0.01')),
         'net_salary': max(net_salary, D('0')).quantize(D('0.01')),
-        'boutique_items': boutique_items,
+        'boutique_items': boutique_issues,
         'active_loans': active_loans,
         'boutique_deduction': boutique_deduction.quantize(D('0.01')),
         'loan_deduction': loan_deduction.quantize(D('0.01')),
@@ -473,10 +473,10 @@ def auto_generate_payroll(request):
                     defaults=result['breakdown']
                 )
 
-                for item in result.get('boutique_items', []):
-                    item.is_deducted = True
-                    item.deducted_in_payroll = payroll
-                    item.save()
+                for issue in result.get('boutique_items', []):
+                    issue.is_deducted = True
+                    issue.deducted_in_payroll = payroll
+                    issue.save()
 
                 for loan in result.get('active_loans', []):
                     if loan.remaining_amount > 0:
@@ -557,31 +557,84 @@ def policy_activate(request, pk):
 
 
 @login_required
-def boutique_list(request):
-    items = BoutiqueItem.objects.select_related('employee').all()
-    paginator = Paginator(items, 15)
+def boutique_product_list(request):
+    products = BoutiqueProduct.objects.all()
+    paginator = Paginator(products, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    total_pending = items.filter(is_deducted=False).aggregate(total=Sum('item_price'))['total'] or 0
-    total_deducted = items.filter(is_deducted=True).aggregate(total=Sum('item_price'))['total'] or 0
-    return render(request, 'payroll/boutique_list.html', {
-        'items': page_obj,
+    return render(request, 'payroll/boutique_product_list.html', {
+        'products': page_obj,
+    })
+
+
+@login_required
+def boutique_product_create(request):
+    if request.method == 'POST':
+        form = BoutiqueProductForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Product added successfully.')
+            return redirect('boutique_product_list')
+    else:
+        form = BoutiqueProductForm()
+    return render(request, 'payroll/boutique_product_form.html', {'form': form, 'title': 'Add Product'})
+
+
+@login_required
+def boutique_product_edit(request, pk):
+    product = get_object_or_404(BoutiqueProduct, pk=pk)
+    if request.method == 'POST':
+        form = BoutiqueProductForm(request.POST, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Product updated successfully.')
+            return redirect('boutique_product_list')
+    else:
+        form = BoutiqueProductForm(instance=product)
+    return render(request, 'payroll/boutique_product_form.html', {'form': form, 'title': 'Edit Product'})
+
+
+@login_required
+def boutique_product_delete(request, pk):
+    product = get_object_or_404(BoutiqueProduct, pk=pk)
+    if request.method == 'POST':
+        product.delete()
+        messages.success(request, 'Product deleted successfully.')
+        return redirect('boutique_product_list')
+    return render(request, 'payroll/boutique_confirm_delete.html', {'product': product})
+
+
+@login_required
+def boutique_issue_list(request):
+    issues = BoutiqueIssue.objects.select_related('employee', 'product').all()
+    paginator = Paginator(issues, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    total_pending = issues.filter(is_deducted=False).aggregate(total=Sum('total_price'))['total'] or 0
+    total_deducted = issues.filter(is_deducted=True).aggregate(total=Sum('total_price'))['total'] or 0
+    return render(request, 'payroll/boutique_issue_list.html', {
+        'issues': page_obj,
         'total_pending': total_pending,
         'total_deducted': total_deducted,
     })
 
 
 @login_required
-def boutique_create(request):
+def boutique_issue_create(request):
     if request.method == 'POST':
-        form = BoutiqueItemForm(request.POST)
+        form = BoutiqueIssueForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Boutique item added successfully.')
-            return redirect('boutique_list')
+            issue = form.save(commit=False)
+            issue.total_price = issue.product.price * issue.quantity
+            issue.save()
+            product = issue.product
+            product.stock -= issue.quantity
+            product.save()
+            messages.success(request, f'{issue.product.name} issued to {issue.employee.first_name}. Will be deducted from salary.')
+            return redirect('boutique_issue_list')
     else:
-        form = BoutiqueItemForm()
-    return render(request, 'payroll/boutique_form.html', {'form': form})
+        form = BoutiqueIssueForm()
+    return render(request, 'payroll/boutique_issue_form.html', {'form': form})
 
 
 @login_required

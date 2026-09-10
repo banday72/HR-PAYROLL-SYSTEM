@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from employees.models import Department, Employee
 from attendance.models import Attendance
 from leaves.models import LeaveType, Leave
-from payroll.models import Payroll, PayrollPolicy, BoutiqueItem, BudgetLoan
+from payroll.models import Payroll, PayrollPolicy, BoutiqueProduct, BoutiqueIssue, BudgetLoan
 from datetime import date, time, timedelta
 import calendar
 
@@ -216,27 +216,47 @@ for emp_id, emp in employees.items():
 
 print("Created payroll records")
 
-# Create boutique items
-boutique_data = [
-    ('EMP001', 'Laptop', 80000, date(2026, 9, 1), True, 'Company laptop issued'),
-    ('EMP003', 'Office Chair', 15000, date(2026, 9, 3), False, 'Ergonomic chair'),
-    ('EMP005', 'Monitor', 35000, date(2026, 9, 5), False, 'External monitor'),
-    ('EMP002', 'Shirt', 1500, date(2026, 9, 2), True, 'Office uniform'),
-    ('EMP007', 'Bag', 2500, date(2026, 9, 4), False, 'Laptop bag'),
+# Create boutique products
+products_data = [
+    ('Laptop', 80000, 10, 'Company laptop'),
+    ('Office Chair', 15000, 20, 'Ergonomic chair'),
+    ('Monitor', 35000, 15, 'External monitor'),
+    ('Shirt', 1500, 100, 'Office uniform shirt'),
+    ('Bag', 2500, 50, 'Laptop bag'),
 ]
 
-for emp_id, item_name, price, purchase_date, is_deducted, notes in boutique_data:
-    BoutiqueItem.objects.get_or_create(
+products = {}
+for name, price, stock, desc in products_data:
+    p, _ = BoutiqueProduct.objects.get_or_create(
+        name=name,
+        defaults={'price': price, 'stock': stock, 'description': desc}
+    )
+    products[name] = p
+print(f"Created {len(products)} boutique products")
+
+# Create boutique issues (employees taking items)
+issues_data = [
+    ('EMP001', 'Laptop', 1, date(2026, 9, 1), 'Ahmed Khan (Manager)'),
+    ('EMP003', 'Office Chair', 1, date(2026, 9, 3), 'Ahmed Khan (Manager)'),
+    ('EMP005', 'Monitor', 1, date(2026, 9, 5), 'Ahmed Khan (Manager)'),
+    ('EMP002', 'Shirt', 2, date(2026, 9, 2), 'Ahmed Khan (Manager)'),
+    ('EMP007', 'Bag', 1, date(2026, 9, 4), 'Ahmed Khan (Manager)'),
+]
+
+for emp_id, product_name, qty, issue_date, issued_by in issues_data:
+    prod = products[product_name]
+    BoutiqueIssue.objects.get_or_create(
         employee=employees[emp_id],
-        item_name=item_name,
+        product=prod,
         defaults={
-            'item_price': price,
-            'purchase_date': purchase_date,
-            'is_deducted': is_deducted,
-            'notes': notes,
+            'quantity': qty,
+            'total_price': prod.price * qty,
+            'issue_date': issue_date,
+            'is_deducted': False,
+            'issued_by': issued_by,
         }
     )
-print("Created boutique items")
+print("Created boutique issues")
 
 # Create budget loans
 loan_data = [
@@ -270,7 +290,8 @@ print(f"               (use employee_id as username)")
 print(f"Total: {Employee.objects.count()} employees, {Department.objects.count()} departments")
 print(f"Attendance: {Attendance.objects.count()} records")
 print(f"Payroll: {Payroll.objects.count()} records")
-print(f"Boutique Items: {BoutiqueItem.objects.count()} records")
+print(f"Boutique Products: {BoutiqueProduct.objects.count()} records")
+print(f"Boutique Issues: {BoutiqueIssue.objects.count()} records")
 print(f"Budget Loans: {BudgetLoan.objects.count()} records")
 print(f"Policy: {PayrollPolicy.objects.count()} policies")
 print("=" * 50)
