@@ -7,28 +7,21 @@
     <title>{% block title %}HR Payroll System{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231a5276'/%3E%3Ctext x='32' y='44' font-family='Arial' font-size='36' font-weight='900' fill='white' text-anchor='middle'%3EHR%3C/text%3E%3C/svg%3E">
     <style>
         :root { --sidebar-width: 250px; --primary-color: #2980b9; --success-color: #1cc88a; --info-color: #36b9cc; --warning-color: #f6c23e; --danger-color: #e74a3b; --header-height: 60px; }
         body { background-color: #f8f9fc; font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
 
-        /* Top Header Bar with Logo */
-        .app-header { height: var(--header-height); background: linear-gradient(90deg, #1a5276, #2980b9); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; position: fixed; top: 0; left: 0; right: 0; z-index: 200; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
-        .logo-area { display: flex; align-items: center; gap: 12px; }
-        .logo-icon { width: 40px; height: 40px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,.15); flex-shrink: 0; }
-        .logo-icon .mtbc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 28px; height: 28px; }
-        .logo-icon .mtbc-grid div { border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 10px; font-family: Arial, sans-serif; }
-        .logo-icon .mtbc-grid .m1 { background: #1a5276; }
-        .logo-icon .mtbc-grid .t1 { background: #2980b9; }
-        .logo-icon .mtbc-grid .b1 { background: #5dade2; }
-        .logo-icon .mtbc-grid .c1 { background: #aed6f1; color: #1a5276; }
-        .app-title { color: #fff; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1.2; }
-        .app-subtitle { color: rgba(255,255,255,.75); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px; }
+        .app-header { height: var(--header-height); background: #fff; border-bottom: 2px solid #e3e6f0; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; position: fixed; top: 0; left: 0; right: 0; z-index: 200; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-area svg { flex-shrink: 0; }
+        .logo-text .app-title { color: #1a5276; font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+        .logo-text .app-subtitle { color: #5dade2; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.5px; }
         .header-right { display: flex; align-items: center; gap: 1rem; }
-        .user-badge { background: rgba(255,255,255,.15); color: white; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; }
-        .btn-logout { background: rgba(255,255,255,.2); color: white; border: 1px solid rgba(255,255,255,.3); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; text-decoration: none; }
-        .btn-logout:hover { background: rgba(255,255,255,.3); color: white; }
+        .user-badge { background: #f0f4f8; color: #1a5276; padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.82rem; font-weight: 500; }
+        .btn-logout { background: #e74a3b; color: white; border: none; padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.82rem; text-decoration: none; font-weight: 500; }
+        .btn-logout:hover { background: #c0392b; color: white; }
 
-        /* Sidebar */
         .sidebar { min-height: calc(100vh - var(--header-height)); background: linear-gradient(180deg, #1a5276 0%, #2980b9 100%); width: var(--sidebar-width); position: fixed; top: var(--header-height); left: 0; z-index: 100; overflow-y: auto; padding-top: 0.5rem; }
         .sidebar .nav-link { color: rgba(255,255,255,.8); padding: 0.55rem 1rem; margin: 0.05rem 0.5rem; border-radius: 0.35rem; font-size: 0.88rem; }
         .sidebar .nav-link:hover { color: #fff; background: rgba(255,255,255,.12); }
@@ -36,7 +29,6 @@
         .sidebar .nav-link i { margin-right: 0.5rem; width: 20px; text-align: center; }
         .sidebar-heading { color: rgba(255,255,255,.45); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1rem; padding: 0.75rem 1rem 0.25rem; }
 
-        /* Content */
         .content-wrapper { margin-left: var(--sidebar-width); margin-top: var(--header-height); min-height: calc(100vh - var(--header-height)); }
         .topbar { height: 3.2rem; background: #fff; border-bottom: 1px solid #e3e6f0; display: flex; align-items: center; padding: 0 2rem; margin-bottom: 1.25rem; box-shadow: 0 0.1rem 1rem 0 rgba(58,59,69,.06); }
         .topbar h5 { margin: 0; color: #333; font-size: 1rem; }
@@ -55,20 +47,21 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Top Header Bar -->
     <header class="app-header">
         <div class="logo-area">
-            <div class="logo-icon">
-                <div class="mtbc-grid">
-                    <div class="m1">M</div>
-                    <div class="t1">T</div>
-                    <div class="b1">B</div>
-                    <div class="c1">C</div>
-                </div>
-            </div>
-            <div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 100 100">
+                <rect x="2" y="2" width="46" height="46" rx="6" fill="#1a5276"/>
+                <text x="25" y="35" font-family="Arial,Helvetica,sans-serif" font-size="30" font-weight="900" fill="white" text-anchor="middle">M</text>
+                <rect x="52" y="2" width="46" height="46" rx="6" fill="#2980b9"/>
+                <text x="75" y="35" font-family="Arial,Helvetica,sans-serif" font-size="30" font-weight="900" fill="white" text-anchor="middle">T</text>
+                <rect x="2" y="52" width="46" height="46" rx="6" fill="#5dade2"/>
+                <text x="25" y="85" font-family="Arial,Helvetica,sans-serif" font-size="30" font-weight="900" fill="white" text-anchor="middle">B</text>
+                <rect x="52" y="52" width="46" height="46" rx="6" fill="#aed6f1"/>
+                <text x="75" y="85" font-family="Arial,Helvetica,sans-serif" font-size="30" font-weight="900" fill="#1a5276" text-anchor="middle">C</text>
+            </svg>
+            <div class="logo-text">
                 <div class="app-title">HR Payroll System</div>
-                <div class="app-subtitle">MTBC CoreCloud</div>
+                <div class="app-subtitle">CoreCloud</div>
             </div>
         </div>
         <div class="header-right">
@@ -81,7 +74,6 @@
         </div>
     </header>
 
-    <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-heading">Main</div>
         <nav class="nav flex-column">
@@ -139,7 +131,6 @@
         </nav>
     </div>
 
-    <!-- Main Content -->
     <div class="content-wrapper">
         <div class="topbar">
             <h5>{% block page_title %}Dashboard{% endblock %}</h5>
