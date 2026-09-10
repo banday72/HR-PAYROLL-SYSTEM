@@ -57,12 +57,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hr_payroll.wsgi.application'
 
-# Database - Use PostgreSQL on Vercel, SQLite locally
+# Database - Neon PostgreSQL
 DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600,
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'neondb',
+        'USER': 'neondb_owner',
+        'PASSWORD': 'npg_adAkM6ys7IbP',
+        'HOST': 'ep-patient-paper-a5ytpg93-pooler.us-east-2.aws.neon.tech',
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'require',
+        },
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
