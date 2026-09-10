@@ -6,6 +6,7 @@ from datetime import date, datetime
 from .models import Attendance
 from .forms import AttendanceForm, AttendanceFilterForm
 from employees.views import get_employee
+from employees.decorators import hr_required
 
 
 @login_required
@@ -96,6 +97,7 @@ def attendance_clock_out(request):
 
 
 @login_required
+@hr_required
 def attendance_create(request):
     if request.method == 'POST':
         form = AttendanceForm(request.POST)
@@ -109,6 +111,7 @@ def attendance_create(request):
 
 
 @login_required
+@hr_required
 def attendance_update(request, pk):
     attendance = get_object_or_404(Attendance, pk=pk)
     if request.method == 'POST':
@@ -123,6 +126,7 @@ def attendance_update(request, pk):
 
 
 @login_required
+@hr_required
 def attendance_delete(request, pk):
     attendance = get_object_or_404(Attendance, pk=pk)
     if request.method == 'POST':

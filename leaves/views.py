@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from .models import Leave, LeaveType
 from .forms import LeaveForm, LeaveTypeForm, LeaveApprovalForm
 from employees.views import get_employee
+from employees.decorators import hr_required
 
 
 @login_required
@@ -52,6 +53,7 @@ def leave_create(request):
 
 
 @login_required
+@hr_required
 def leave_approve(request, pk):
     leave = get_object_or_404(Leave, pk=pk)
     if request.method == 'POST':
@@ -68,6 +70,7 @@ def leave_approve(request, pk):
 
 
 @login_required
+@hr_required
 def leave_delete(request, pk):
     leave = get_object_or_404(Leave, pk=pk)
     if request.method == 'POST':
@@ -84,6 +87,7 @@ def leave_type_list(request):
 
 
 @login_required
+@hr_required
 def leave_type_create(request):
     if request.method == 'POST':
         form = LeaveTypeForm(request.POST)

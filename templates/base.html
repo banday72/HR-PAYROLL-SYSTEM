@@ -66,6 +66,7 @@
         </div>
         <div class="header-right">
             {% if user.is_authenticated %}
+            {% if is_hr %}<span class="badge bg-success me-1">HR</span>{% else %}<span class="badge bg-secondary me-1">Employee</span>{% endif %}
             <span class="user-badge"><i class="fas fa-user-circle me-1"></i> {{ user.username }}</span>
             <a href="{% url 'logout' %}" class="btn-logout">
                 <i class="fas fa-sign-out-alt me-1"></i> Logout
@@ -81,7 +82,8 @@
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a>
         </nav>
-        <div class="sidebar-heading">Management</div>
+        {% if is_hr %}
+        <div class="sidebar-heading">HR Management</div>
         <nav class="nav flex-column">
             <a class="nav-link {% if 'employee' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'employee_list' %}">
                 <i class="fas fa-users"></i> Employees
@@ -89,6 +91,10 @@
             <a class="nav-link {% if 'department' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'department_list' %}">
                 <i class="fas fa-building"></i> Departments
             </a>
+        </nav>
+        {% endif %}
+        <div class="sidebar-heading">My Records</div>
+        <nav class="nav flex-column">
             <a class="nav-link {% if 'attendance' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'attendance_list' %}">
                 <i class="fas fa-clock"></i> Attendance
             </a>
@@ -96,6 +102,7 @@
                 <i class="fas fa-calendar-alt"></i> Leaves
             </a>
         </nav>
+        {% if is_hr %}
         <div class="sidebar-heading">Payroll</div>
         <nav class="nav flex-column">
             <a class="nav-link {% if request.resolver_match.url_name == 'payroll_list' %}active{% endif %}" href="{% url 'payroll_list' %}">
@@ -129,6 +136,7 @@
                 <i class="fas fa-chart-bar"></i> Summary
             </a>
         </nav>
+        {% endif %}
     </div>
 
     <div class="content-wrapper">

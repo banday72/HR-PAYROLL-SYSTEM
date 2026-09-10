@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import Department, Employee
 from .forms import DepartmentForm, EmployeeForm
+from .decorators import hr_required
 
 
 def get_employee(user):
@@ -22,7 +23,11 @@ def dashboard(request):
     from attendance.models import Attendance
     from datetime import date
 
-    if employee:
+    is_hr = False
+    if employee and employee.is_hr:
+        is_hr = True
+
+    if employee and not is_hr:
         today = date.today()
         my_attendance = Attendance.objects.filter(employee=employee, date=today).first()
         my_leaves = Leave.objects.filter(employee=employee).count()
@@ -35,6 +40,7 @@ def dashboard(request):
             'my_pending_leaves': my_pending_leaves,
             'my_payrolls': my_payrolls,
             'is_employee': True,
+            'is_hr': False,
         }
     else:
         total_employees = Employee.objects.filter(status='active').count()
@@ -49,37 +55,60 @@ def dashboard(request):
             'pending_leaves': pending_leaves,
             'draft_payrolls': draft_payrolls,
             'is_employee': False,
+            'is_hr': is_hr,
         }
     return render(request, 'dashboard.html', context)
 
 
 @login_required
+@hr_required
 def employee_list(request):
-    employees = Employee.objects.all()
+    employees = Employee.objects.select_related('department').all()
     search = request.GET.get('search', '')
+    department_id = request.GET.get('department', '')
+    status = request.GET.get('status', '')
     if search:
         employees = employees.filter(
             Q(employee_id__icontains=search) |
             Q(first_name__icontains=search) |
-            Q(last_name__icontains=search)
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(phone__icontains=search) |
+            Q(designation__icontains=search) |
+            Q(department__name__icontains=search) |
+            Q(city__icontains=search)
         )
+    if department_id:
+        employees = employees.filter(department_id=department_id)
+    if status:
+        employees = employees.filter(status=status)
     paginator = Paginator(employees, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    departments = Department.objects.all()
     return render(request, 'employees/employee_list.html', {
         'employees': page_obj,
         'page_obj': page_obj,
         'search': search,
+        'departments': departments,
+        'selected_department': department_id,
+        'selected_status': status,
     })
 
 
 @login_required
 def employee_detail(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
-    return render(request, 'employees/employee_detail.html', {'employee': employee})
+    current_employee = get_employee(request.user)
+    is_hr = current_employee.is_hr if current_employee else request.user.is_superuser
+    return render(request, 'employees/employee_detail.html', {
+        'employee': employee,
+        'is_hr': is_hr,
+    })
 
 
 @login_required
+@hr_required
 def employee_create(request):
     if request.method == 'POST':
         form = EmployeeForm(request.POST, request.FILES)
@@ -103,6 +132,7 @@ def employee_create(request):
 
 
 @login_required
+@hr_required
 def employee_update(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
@@ -117,6 +147,7 @@ def employee_update(request, pk):
 
 
 @login_required
+@hr_required
 def employee_delete(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
@@ -129,12 +160,14 @@ def employee_delete(request, pk):
 
 
 @login_required
+@hr_required
 def department_list(request):
     departments = Department.objects.all()
     return render(request, 'employees/department_list.html', {'departments': departments})
 
 
 @login_required
+@hr_required
 def department_create(request):
     if request.method == 'POST':
         form = DepartmentForm(request.POST)
@@ -148,6 +181,7 @@ def department_create(request):
 
 
 @login_required
+@hr_required
 def department_update(request, pk):
     department = get_object_or_404(Department, pk=pk)
     if request.method == 'POST':
@@ -162,6 +196,7 @@ def department_update(request, pk):
 
 
 @login_required
+@hr_required
 def department_delete(request, pk):
     department = get_object_or_404(Department, pk=pk)
     if request.method == 'POST':

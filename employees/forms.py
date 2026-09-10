@@ -16,8 +16,8 @@ class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
         fields = ['employee_id', 'first_name', 'last_name', 'email', 'phone',
-                  'date_of_birth', 'gender', 'address', 'department', 'designation',
-                  'date_of_joining', 'salary', 'status', 'profile_picture']
+                  'date_of_birth', 'gender', 'address', 'city', 'department', 'designation',
+                  'date_of_joining', 'salary', 'role', 'status', 'profile_picture']
         widgets = {
             'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -27,10 +27,12 @@ class EmployeeForm(forms.ModelForm):
             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'gender': forms.Select(attrs={'class': 'form-control'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'city': forms.TextInput(attrs={'class': 'form-control'}),
             'department': forms.Select(attrs={'class': 'form-control'}),
             'designation': forms.TextInput(attrs={'class': 'form-control'}),
             'date_of_joining': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'salary': forms.NumberInput(attrs={'class': 'form-control'}),
+            'role': forms.Select(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }

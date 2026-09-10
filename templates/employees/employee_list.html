@@ -1,19 +1,54 @@
 {% extends "base.html" %}
 {% block title %}Employees{% endblock %}
-{% block page_title %}Employees{% endblock %}
+{% block page_title %}Employee Management{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between mb-3">
-    <div class="d-flex align-items-center gap-3">
-        <form class="d-flex" method="get" style="max-width:300px">
-            <input type="text" name="search" class="form-control me-2" placeholder="Search employees..." value="{{ search }}">
-            <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search"></i></button>
-        </form>
-        <span class="badge bg-primary fs-6">{{ employees.paginator.count }} Employee{{ employees.paginator.count|pluralize }}</span>
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-search me-1"></i> Search & Filter</h6>
     </div>
-    <a href="{% url 'employee_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Employee</a>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="ID, name, email, phone, designation..." value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Department</label>
+                <select name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"d" %}selected{% endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="terminated" {% if selected_status == 'terminated' %}selected{% endif %}>Terminated</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Search</button>
+            </div>
+            <div class="col-md-1">
+                <a href="{% url 'employee_list' %}" class="btn btn-outline-secondary w-100"><i class="fas fa-times"></i></a>
+            </div>
+            <div class="col-md-2">
+                <a href="{% url 'employee_create' %}" class="btn btn-success w-100"><i class="fas fa-plus"></i> Add Employee</a>
+            </div>
+        </form>
+    </div>
 </div>
+
 <div class="card shadow">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-users me-1"></i> Employee Records</h6>
+        <span class="badge bg-primary fs-6">{{ page_obj.paginator.count }} Employee{{ page_obj.paginator.count|pluralize }}</span>
+    </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
@@ -22,9 +57,11 @@
                         <th>Employee ID</th>
                         <th>Name</th>
                         <th>Email</th>
+                        <th>Phone</th>
                         <th>Department</th>
                         <th>Designation</th>
                         <th>Salary</th>
+                        <th>Role</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -32,20 +69,39 @@
                 <tbody>
                     {% for emp in employees %}
                     <tr>
-                        <td>{{ emp.employee_id }}</td>
-                        <td><a href="{% url 'employee_detail' emp.pk %}">{{ emp.full_name }}</a></td>
+                        <td><strong>{{ emp.employee_id }}</strong></td>
+                        <td><a href="{% url 'employee_detail' emp.pk %}" class="text-decoration-none">{{ emp.full_name }}</a></td>
                         <td>{{ emp.email }}</td>
+                        <td>{{ emp.phone|default:"-" }}</td>
                         <td>{{ emp.department|default:"-" }}</td>
                         <td>{{ emp.designation|default:"-" }}</td>
                         <td>Rs. {{ emp.salary|floatformat:2 }}</td>
-                        <td><span class="badge bg-{{ emp.status|yesno:'success,warning,danger' }}">{{ emp.get_status_display }}</span></td>
                         <td>
-                            <a href="{% url 'employee_update' emp.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                            <a href="{% url 'employee_delete' emp.pk %}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                            {% if emp.role == 'hr' %}
+                            <span class="badge bg-success">HR</span>
+                            {% elif emp.role == 'manager' %}
+                            <span class="badge bg-warning text-dark">Manager</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Employee</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if emp.status == 'active' %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif emp.status == 'inactive' %}
+                            <span class="badge bg-warning text-dark">Inactive</span>
+                            {% else %}
+                            <span class="badge bg-danger">Terminated</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'employee_detail' emp.pk %}" class="btn btn-sm btn-outline-info" title="View"><i class="fas fa-eye"></i></a>
+                            <a href="{% url 'employee_update' emp.pk %}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'employee_delete' emp.pk %}" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></a>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="text-center">No employees found.</td></tr>
+                    <tr><td colspan="10" class="text-center py-4">No employees found.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

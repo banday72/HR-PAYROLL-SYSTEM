@@ -8,6 +8,7 @@ from decimal import Decimal
 from datetime import datetime, date
 from calendar import monthrange
 import csv
+from employees.decorators import hr_required
 from .models import Payroll, PayrollPolicy, PayrollBreakdown, BoutiqueProduct, BoutiqueIssue, BudgetLoan
 from .forms import PayrollForm, PayrollFilterForm, PayrollPolicyForm, BoutiqueProductForm, BoutiqueIssueForm, BudgetLoanForm
 from employees.models import Employee, Department
@@ -237,6 +238,7 @@ def payroll_update(request, pk):
 
 
 @login_required
+@hr_required
 def payroll_delete(request, pk):
     payroll = get_object_or_404(Payroll, pk=pk)
     if request.method == 'POST':
@@ -286,6 +288,7 @@ def payroll_export(request):
 
 
 @login_required
+@hr_required
 def payroll_summary(request):
     current_year = datetime.now().year
     monthly_summary = Payroll.objects.filter(year=current_year).values('month').annotate(
@@ -435,6 +438,7 @@ def salary_slip_pdf(request, pk):
 
 
 @login_required
+@hr_required
 def auto_generate_payroll(request):
     if request.method == 'POST':
         month = int(request.POST.get('month', datetime.now().month))
@@ -512,12 +516,14 @@ def auto_generate_payroll(request):
 
 
 @login_required
+@hr_required
 def policy_list(request):
     policies = PayrollPolicy.objects.all()
     return render(request, 'payroll/policy_list.html', {'policies': policies})
 
 
 @login_required
+@hr_required
 def policy_create(request):
     if request.method == 'POST':
         form = PayrollPolicyForm(request.POST)
@@ -531,6 +537,7 @@ def policy_create(request):
 
 
 @login_required
+@hr_required
 def policy_update(request, pk):
     policy = get_object_or_404(PayrollPolicy, pk=pk)
     if request.method == 'POST':
@@ -545,6 +552,7 @@ def policy_update(request, pk):
 
 
 @login_required
+@hr_required
 def policy_activate(request, pk):
     policy = get_object_or_404(PayrollPolicy, pk=pk)
     PayrollPolicy.objects.update(is_active=False)
@@ -555,6 +563,7 @@ def policy_activate(request, pk):
 
 
 @login_required
+@hr_required
 def boutique_product_list(request):
     products = BoutiqueProduct.objects.all()
     paginator = Paginator(products, 15)
@@ -566,6 +575,7 @@ def boutique_product_list(request):
 
 
 @login_required
+@hr_required
 def boutique_product_create(request):
     if request.method == 'POST':
         form = BoutiqueProductForm(request.POST)
@@ -579,6 +589,7 @@ def boutique_product_create(request):
 
 
 @login_required
+@hr_required
 def boutique_product_edit(request, pk):
     product = get_object_or_404(BoutiqueProduct, pk=pk)
     if request.method == 'POST':
@@ -593,6 +604,7 @@ def boutique_product_edit(request, pk):
 
 
 @login_required
+@hr_required
 def boutique_product_delete(request, pk):
     product = get_object_or_404(BoutiqueProduct, pk=pk)
     if request.method == 'POST':
@@ -603,6 +615,7 @@ def boutique_product_delete(request, pk):
 
 
 @login_required
+@hr_required
 def boutique_issue_list(request):
     issues = BoutiqueIssue.objects.select_related('employee', 'product').all()
     paginator = Paginator(issues, 15)
@@ -618,6 +631,7 @@ def boutique_issue_list(request):
 
 
 @login_required
+@hr_required
 def boutique_issue_create(request):
     if request.method == 'POST':
         form = BoutiqueIssueForm(request.POST)
@@ -636,6 +650,7 @@ def boutique_issue_create(request):
 
 
 @login_required
+@hr_required
 def loan_list(request):
     loans = BudgetLoan.objects.select_related('employee').all()
     paginator = Paginator(loans, 15)
@@ -651,6 +666,7 @@ def loan_list(request):
 
 
 @login_required
+@hr_required
 def loan_create(request):
     if request.method == 'POST':
         form = BudgetLoanForm(request.POST)
@@ -664,6 +680,7 @@ def loan_create(request):
 
 
 @login_required
+@hr_required
 def department_salary(request):
     departments = Department.objects.all()
     dept_data = []
