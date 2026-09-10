@@ -1,5 +1,5 @@
 from django import forms
-from .models import Payroll, PayrollPolicy
+from .models import Payroll, PayrollPolicy, BoutiqueItem, BudgetLoan
 from employees.models import Employee
 
 
@@ -70,4 +70,31 @@ class PayrollPolicyForm(forms.ModelForm):
             'transport_allowance': forms.NumberInput(attrs={'class': 'form-control'}),
             'house_allowance_percent': forms.NumberInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class BoutiqueItemForm(forms.ModelForm):
+    class Meta:
+        model = BoutiqueItem
+        fields = ['employee', 'item_name', 'item_price', 'purchase_date', 'notes']
+        widgets = {
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'item_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Shirt, Laptop, Chair'}),
+            'item_price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'}),
+            'purchase_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Optional notes...'}),
+        }
+
+
+class BudgetLoanForm(forms.ModelForm):
+    class Meta:
+        model = BudgetLoan
+        fields = ['employee', 'loan_amount', 'monthly_deduction', 'reason', 'start_date', 'end_date']
+        widgets = {
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'loan_amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'}),
+            'monthly_deduction': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00'}),
+            'reason': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Emergency loan, Advance salary'}),
+            'start_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'end_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }

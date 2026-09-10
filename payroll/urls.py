@@ -17,4 +17,9 @@ urlpatterns = [
     path('policy/create/', views.policy_create, name='policy_create'),
     path('policy/<int:pk>/edit/', views.policy_update, name='policy_update'),
     path('policy/<int:pk>/activate/', views.policy_activate, name='policy_activate'),
+    path('boutique/', views.boutique_list, name='boutique_list'),
+    path('boutique/create/', views.boutique_create, name='boutique_create'),
+    path('loans/', views.loan_list, name='loan_list'),
+    path('loans/create/', views.loan_create, name='loan_create'),
+    path('department-salary/', views.department_salary, name='department_salary'),
 ]

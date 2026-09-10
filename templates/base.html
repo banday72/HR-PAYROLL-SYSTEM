@@ -68,6 +68,15 @@
             <a class="nav-link {% if request.resolver_match.url_name == 'auto_generate_payroll' %}active{% endif %}" href="{% url 'auto_generate_payroll' %}">
                 <i class="fas fa-magic"></i> Auto Generate
             </a>
+            <a class="nav-link {% if 'boutique' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'boutique_list' %}">
+                <i class="fas fa-store"></i> Boutique Items
+            </a>
+            <a class="nav-link {% if 'loan' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'loan_list' %}">
+                <i class="fas fa-hand-holding-usd"></i> Budget Loans
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'department_salary' %}active{% endif %}" href="{% url 'department_salary' %}">
+                <i class="fas fa-building"></i> Dept Salary
+            </a>
             <a class="nav-link {% if 'policy' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'policy_list' %}">
                 <i class="fas fa-cog"></i> Policy
             </a>

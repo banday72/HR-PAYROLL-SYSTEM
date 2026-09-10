@@ -1,6 +1,7 @@
 import os
 import sys
 import django
+from decimal import Decimal
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hr_payroll.settings')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -10,7 +11,7 @@ from django.contrib.auth.models import User
 from employees.models import Department, Employee
 from attendance.models import Attendance
 from leaves.models import LeaveType, Leave
-from payroll.models import Payroll, PayrollPolicy
+from payroll.models import Payroll, PayrollPolicy, BoutiqueItem, BudgetLoan
 from datetime import date, time, timedelta
 import calendar
 
@@ -191,9 +192,9 @@ print("Created leave requests")
 # Create sample payroll records (August 2026)
 for emp_id, emp in employees.items():
     basic = emp.salary / 12
-    allowances = basic * 0.15
-    deductions = basic * 0.05
-    tax = basic * 0.10
+    allowances = basic * Decimal('0.15')
+    deductions = basic * Decimal('0.05')
+    tax = basic * Decimal('0.10')
     net = basic + allowances - deductions - tax
 
     Payroll.objects.get_or_create(
@@ -215,6 +216,50 @@ for emp_id, emp in employees.items():
 
 print("Created payroll records")
 
+# Create boutique items
+boutique_data = [
+    ('EMP001', 'Laptop', 80000, date(2026, 9, 1), True, 'Company laptop issued'),
+    ('EMP003', 'Office Chair', 15000, date(2026, 9, 3), False, 'Ergonomic chair'),
+    ('EMP005', 'Monitor', 35000, date(2026, 9, 5), False, 'External monitor'),
+    ('EMP002', 'Shirt', 1500, date(2026, 9, 2), True, 'Office uniform'),
+    ('EMP007', 'Bag', 2500, date(2026, 9, 4), False, 'Laptop bag'),
+]
+
+for emp_id, item_name, price, purchase_date, is_deducted, notes in boutique_data:
+    BoutiqueItem.objects.get_or_create(
+        employee=employees[emp_id],
+        item_name=item_name,
+        defaults={
+            'item_price': price,
+            'purchase_date': purchase_date,
+            'is_deducted': is_deducted,
+            'notes': notes,
+        }
+    )
+print("Created boutique items")
+
+# Create budget loans
+loan_data = [
+    ('EMP001', 60000, 5000, 'Emergency loan', date(2026, 8, 1)),
+    ('EMP004', 30000, 3000, 'Advance salary', date(2026, 7, 1)),
+    ('EMP009', 20000, 2000, 'Medical expense', date(2026, 9, 1)),
+]
+
+for emp_id, loan_amount, monthly, reason, start_date in loan_data:
+    BudgetLoan.objects.get_or_create(
+        employee=employees[emp_id],
+        reason=reason,
+        defaults={
+            'loan_amount': loan_amount,
+            'monthly_deduction': monthly,
+            'start_date': start_date,
+            'is_active': True,
+            'total_deducted': 0,
+            'remaining_amount': loan_amount,
+        }
+    )
+print("Created budget loans")
+
 print("\n" + "=" * 50)
 print("SEEDING COMPLETE!")
 print("=" * 50)
@@ -225,5 +270,7 @@ print(f"               (use employee_id as username)")
 print(f"Total: {Employee.objects.count()} employees, {Department.objects.count()} departments")
 print(f"Attendance: {Attendance.objects.count()} records")
 print(f"Payroll: {Payroll.objects.count()} records")
+print(f"Boutique Items: {BoutiqueItem.objects.count()} records")
+print(f"Budget Loans: {BudgetLoan.objects.count()} records")
 print(f"Policy: {PayrollPolicy.objects.count()} policies")
 print("=" * 50)

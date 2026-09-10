@@ -10,4 +10,18 @@ from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
 def handler(request):
-    return application(request.environ, lambda status, headers: None)
+    status_code = 200
+    headers_dict = {}
+
+    def start_response(status, headers, exc_info=None):
+        nonlocal status_code, headers_dict
+        status_code = int(status.split(' ', 1)[0])
+        headers_dict = dict(headers)
+
+    response_body = b''.join(application(request.environ, start_response))
+
+    return {
+        'statusCode': status_code,
+        'headers': headers_dict,
+        'body': response_body.decode('utf-8', errors='replace'),
+    }

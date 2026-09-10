@@ -8,9 +8,9 @@ from decimal import Decimal
 from datetime import datetime, date
 from calendar import monthrange
 import csv
-from .models import Payroll, PayrollPolicy, PayrollBreakdown
-from .forms import PayrollForm, PayrollFilterForm, PayrollPolicyForm
-from employees.models import Employee
+from .models import Payroll, PayrollPolicy, PayrollBreakdown, BoutiqueItem, BudgetLoan
+from .forms import PayrollForm, PayrollFilterForm, PayrollPolicyForm, BoutiqueItemForm, BudgetLoanForm
+from employees.models import Employee, Department
 from employees.views import get_employee
 from attendance.models import Attendance
 from leaves.models import Leave
@@ -103,11 +103,32 @@ def calculate_auto_payroll(employee, month, year, policy):
     total_allowances = medical + transport + house + performance_bonus
 
     gross_salary = basic_earned + total_allowances
-    total_deductions = attendance_deduction + late_deduction
+
+    boutique_items = BoutiqueItem.objects.filter(employee=employee, is_deducted=False)
+    boutique_deduction = sum(item.item_price for item in boutique_items)
+
+    active_loans = BudgetLoan.objects.filter(employee=employee, is_active=True)
+    loan_deduction = D('0')
+    for loan in active_loans:
+        if loan.remaining_amount > 0:
+            deduction = min(loan.monthly_deduction, loan.remaining_amount)
+            loan_deduction += deduction
+
+    total_deductions = attendance_deduction + late_deduction + boutique_deduction + loan_deduction
     taxable = gross_salary - total_deductions
     tax = taxable * (D(str(policy.tax_rate_percent)) / D('100'))
 
     net_salary = gross_salary - total_deductions - tax
+
+    boutique_list = []
+    for item in boutique_items:
+        boutique_list.append({'item_name': item.item_name, 'amount': item.item_price})
+
+    loan_list = []
+    for loan in active_loans:
+        if loan.remaining_amount > 0:
+            deduction = min(loan.monthly_deduction, loan.remaining_amount)
+            loan_list.append({'reason': loan.reason, 'amount': deduction})
 
     return {
         'basic_salary': salary,
@@ -115,6 +136,10 @@ def calculate_auto_payroll(employee, month, year, policy):
         'deductions': (total_deductions + tax).quantize(D('0.01')),
         'tax': tax.quantize(D('0.01')),
         'net_salary': max(net_salary, D('0')).quantize(D('0.01')),
+        'boutique_items': boutique_items,
+        'active_loans': active_loans,
+        'boutique_deduction': boutique_deduction.quantize(D('0.01')),
+        'loan_deduction': loan_deduction.quantize(D('0.01')),
         'breakdown': {
             'total_working_days': int(working_days),
             'days_present': int(days_present),
@@ -127,6 +152,8 @@ def calculate_auto_payroll(employee, month, year, policy):
             'basic_earned': basic_earned.quantize(D('0.01')),
             'attendance_deduction': attendance_deduction.quantize(D('0.01')),
             'late_deduction': late_deduction.quantize(D('0.01')),
+            'boutique_deduction': boutique_deduction.quantize(D('0.01')),
+            'loan_deduction': loan_deduction.quantize(D('0.01')),
             'performance_bonus': performance_bonus.quantize(D('0.01')),
             'bonus_percentage': bonus_pct,
             'medical_allowance': medical,
@@ -446,6 +473,20 @@ def auto_generate_payroll(request):
                     defaults=result['breakdown']
                 )
 
+                for item in result.get('boutique_items', []):
+                    item.is_deducted = True
+                    item.deducted_in_payroll = payroll
+                    item.save()
+
+                for loan in result.get('active_loans', []):
+                    if loan.remaining_amount > 0:
+                        deduction = min(loan.monthly_deduction, loan.remaining_amount)
+                        loan.total_deducted += deduction
+                        loan.remaining_amount -= deduction
+                        if loan.remaining_amount <= 0:
+                            loan.is_active = False
+                        loan.save()
+
                 if created:
                     created_count += 1
                 else:
@@ -513,3 +554,84 @@ def policy_activate(request, pk):
     policy.save()
     messages.success(request, f'Policy "{policy.name}" activated.')
     return redirect('policy_list')
+
+
+@login_required
+def boutique_list(request):
+    items = BoutiqueItem.objects.select_related('employee').all()
+    paginator = Paginator(items, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    total_pending = items.filter(is_deducted=False).aggregate(total=Sum('item_price'))['total'] or 0
+    total_deducted = items.filter(is_deducted=True).aggregate(total=Sum('item_price'))['total'] or 0
+    return render(request, 'payroll/boutique_list.html', {
+        'items': page_obj,
+        'total_pending': total_pending,
+        'total_deducted': total_deducted,
+    })
+
+
+@login_required
+def boutique_create(request):
+    if request.method == 'POST':
+        form = BoutiqueItemForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Boutique item added successfully.')
+            return redirect('boutique_list')
+    else:
+        form = BoutiqueItemForm()
+    return render(request, 'payroll/boutique_form.html', {'form': form})
+
+
+@login_required
+def loan_list(request):
+    loans = BudgetLoan.objects.select_related('employee').all()
+    paginator = Paginator(loans, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    total_loan = loans.filter(is_active=True).aggregate(total=Sum('remaining_amount'))['total'] or 0
+    total_deducted = loans.aggregate(total=Sum('total_deducted'))['total'] or 0
+    return render(request, 'payroll/loan_list.html', {
+        'loans': page_obj,
+        'total_loan': total_loan,
+        'total_deducted': total_deducted,
+    })
+
+
+@login_required
+def loan_create(request):
+    if request.method == 'POST':
+        form = BudgetLoanForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Budget loan added successfully.')
+            return redirect('loan_list')
+    else:
+        form = BudgetLoanForm()
+    return render(request, 'payroll/loan_form.html', {'form': form})
+
+
+@login_required
+def department_salary(request):
+    departments = Department.objects.all()
+    dept_data = []
+    for dept in departments:
+        employees = Employee.objects.filter(department=dept, status='active')
+        total_salary = employees.aggregate(total=Sum('salary'))['total'] or 0
+        count = employees.count()
+        avg_salary = total_salary / count if count > 0 else 0
+        dept_data.append({
+            'department': dept,
+            'employee_count': count,
+            'total_salary': total_salary,
+            'avg_salary': avg_salary.quantize(Decimal('0.01')) if count > 0 else 0,
+            'employees': employees,
+        })
+    grand_total = sum(d['total_salary'] for d in dept_data)
+    total_employees = sum(d['employee_count'] for d in dept_data)
+    return render(request, 'payroll/department_salary.html', {
+        'dept_data': dept_data,
+        'grand_total': grand_total,
+        'total_employees': total_employees,
+    })

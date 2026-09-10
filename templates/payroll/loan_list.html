@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Budget Loans - HR Payroll{% endblock %}
+{% block page_title %}Budget Loans{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex gap-3">
+        <div class="card stat-card border-warning" style="min-width:180px">
+            <div class="card-body">
+                <div class="text-xs text-warning fw-bold text-uppercase">Pending Amount</div>
+                <div class="h5 mb-0 mt-1">${{ total_loan|floatformat:2 }}</div>
+            </div>
+        </div>
+        <div class="card stat-card border-success" style="min-width:180px">
+            <div class="card-body">
+                <div class="text-xs text-success fw-bold text-uppercase">Total Deducted</div>
+                <div class="h5 mb-0 mt-1">${{ total_deducted|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+    <a href="{% url 'loan_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add Loan
+    </a>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h6 class="m-0 fw-bold text-primary"><i class="fas fa-hand-holding-usd"></i> All Budget Loans</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Employee</th>
+                        <th>Loan Amount</th>
+                        <th>Monthly Deduction</th>
+                        <th>Remaining</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in loans %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ loan.employee.employee_id }}</strong> - {{ loan.employee.first_name }} {{ loan.employee.last_name }}</td>
+                        <td>${{ loan.loan_amount|floatformat:2 }}</td>
+                        <td>${{ loan.monthly_deduction|floatformat:2 }}</td>
+                        <td><strong>${{ loan.remaining_amount|floatformat:2 }}</strong></td>
+                        <td>{{ loan.reason|truncatewords:10 }}</td>
+                        <td>
+                            {% if loan.is_active %}
+                                <span class="badge bg-warning text-dark">Active</span>
+                            {% else %}
+                                <span class="badge bg-success">Completed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted">No budget loans found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if loans.has_other_pages %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if loans.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ loans.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                {% for num in loans.paginator.page_range %}
+                <li class="page-item {% if loans.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                {% if loans.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ loans.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

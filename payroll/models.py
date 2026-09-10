@@ -105,3 +105,44 @@ class Payroll(models.Model):
     class Meta:
         unique_together = ['employee', 'month', 'year']
         ordering = ['-year', '-month']
+
+
+class BoutiqueItem(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='boutique_items')
+    item_name = models.CharField(max_length=200)
+    item_price = models.DecimalField(max_digits=10, decimal_places=2)
+    purchase_date = models.DateField()
+    is_deducted = models.BooleanField(default=False)
+    deducted_in_payroll = models.ForeignKey('Payroll', null=True, blank=True, on_delete=models.SET_NULL, related_name='boutique_deductions')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.item_name} (${self.item_price})"
+
+    class Meta:
+        ordering = ['-purchase_date']
+
+
+class BudgetLoan(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='budget_loans')
+    loan_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    monthly_deduction = models.DecimalField(max_digits=10, decimal_places=2)
+    reason = models.CharField(max_length=200)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    total_deducted = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    remaining_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - Loan ${self.loan_amount} (${self.remaining_amount} remaining)"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.remaining_amount = self.loan_amount
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-created_at']
