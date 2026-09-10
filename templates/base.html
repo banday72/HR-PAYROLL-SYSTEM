@@ -8,18 +8,31 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --sidebar-width: 250px; --primary-color: #2980b9; --success-color: #1cc88a; --info-color: #36b9cc; --warning-color: #f6c23e; --danger-color: #e74a3b; }
-        body { background-color: #f8f9fc; font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        .sidebar { min-height: 100vh; background: linear-gradient(180deg, #1a5276 10%, #2980b9 100%); width: var(--sidebar-width); position: fixed; top: 0; left: 0; z-index: 100; overflow-y: auto; }
-        .sidebar .nav-link { color: rgba(255,255,255,.8); padding: 0.75rem 1rem; margin: 0.1rem 0.5rem; border-radius: 0.35rem; }
+        :root { --sidebar-width: 250px; --primary-color: #2980b9; --success-color: #1cc88a; --info-color: #36b9cc; --warning-color: #f6c23e; --danger-color: #e74a3b; --header-height: 60px; }
+        body { background-color: #f8f9fc; font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+
+        /* Top Header Bar with Logo */
+        .app-header { height: var(--header-height); background: linear-gradient(90deg, #1a5276, #2980b9); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; position: fixed; top: 0; left: 0; right: 0; z-index: 200; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .app-header .logo-area { display: flex; align-items: center; gap: 12px; }
+        .app-header .logo-area img { height: 38px; width: auto; background: white; border-radius: 6px; padding: 4px 8px; box-shadow: 0 2px 4px rgba(0,0,0,.1); }
+        .app-header .logo-area .app-title { color: #fff; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.5px; }
+        .app-header .logo-area .app-subtitle { color: rgba(255,255,255,.7); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+        .app-header .header-right { display: flex; align-items: center; gap: 1rem; }
+        .app-header .header-right .user-badge { background: rgba(255,255,255,.15); color: white; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; backdrop-filter: blur(4px); }
+        .app-header .header-right .btn-logout { background: rgba(255,255,255,.2); color: white; border: 1px solid rgba(255,255,255,.3); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; text-decoration: none; transition: all .2s; }
+        .app-header .header-right .btn-logout:hover { background: rgba(255,255,255,.3); color: white; }
+
+        /* Sidebar */
+        .sidebar { min-height: 100vh; background: linear-gradient(180deg, #1a5276 10%, #2980b9 100%); width: var(--sidebar-width); position: fixed; top: var(--header-height); left: 0; z-index: 100; overflow-y: auto; padding-top: 0.5rem; }
+        .sidebar .nav-link { color: rgba(255,255,255,.8); padding: 0.6rem 1rem; margin: 0.05rem 0.5rem; border-radius: 0.35rem; font-size: 0.9rem; }
         .sidebar .nav-link:hover { color: #fff; background: rgba(255,255,255,.1); }
-        .sidebar .nav-link.active { color: #fff; background: rgba(255,255,255,.2); }
+        .sidebar .nav-link.active { color: #fff; background: rgba(255,255,255,.2); font-weight: 600; }
         .sidebar .nav-link .fas, .sidebar .nav-link .far { margin-right: 0.5rem; width: 20px; text-align: center; }
-        .sidebar-brand { padding: 1rem 1rem; text-align: center; color: #fff; font-size: 1.2rem; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,.1); margin-bottom: 1rem; }
-        .sidebar-brand img { max-width: 180px; height: auto; margin-bottom: 0.25rem; }
-        .sidebar-heading { color: rgba(255,255,255,.4); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1rem; padding: 0.5rem 1rem; }
-        .content-wrapper { margin-left: var(--sidebar-width); min-height: 100vh; }
-        .topbar { height: 4.375rem; background: #fff; border-bottom: 1px solid #e3e6f0; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; margin-bottom: 1.5rem; box-shadow: 0 0.15rem 1.75rem 0 rgba(58,59,69,.15); }
+        .sidebar-heading { color: rgba(255,255,255,.4); font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1rem; padding: 0.75rem 1rem 0.25rem; }
+
+        /* Content */
+        .content-wrapper { margin-left: var(--sidebar-width); margin-top: var(--header-height); min-height: calc(100vh - var(--header-height)); }
+        .topbar { height: 3.5rem; background: #fff; border-bottom: 1px solid #e3e6f0; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; margin-bottom: 1.5rem; box-shadow: 0 0.15rem 1.75rem 0 rgba(58,59,69,.08); }
         .card { border: none; border-radius: 0.35rem; box-shadow: 0 0.15rem 1.75rem 0 rgba(58,59,69,.08); }
         .card-header { background-color: #f8f9fc; border-bottom: 1px solid #e3e6f0; padding: 0.75rem 1.25rem; }
         .stat-card { border-left: 4px solid; }
@@ -29,17 +42,34 @@
         .stat-card.border-warning { border-left-color: var(--warning-color) !important; }
         .stat-card.border-danger { border-left-color: var(--danger-color) !important; }
         .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
-        .btn-primary:hover { background-color: #2e59d9; border-color: #2e59d9; }
+        .btn-primary:hover { background-color: #1a5276; border-color: #1a5276; }
         .page-header { margin-bottom: 1.5rem; }
         .badge-status { font-size: 0.75rem; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <img src="{% static 'images/logo.svg' %}" alt="MTBC CoreCloud" style="filter: brightness(0) invert(1);">
+    <!-- Top Header Bar with Logo -->
+    <header class="app-header">
+        <div class="logo-area">
+            <img src="{% static 'images/logo.svg' %}" alt="MTBC CoreCloud">
+            <div>
+                <div class="app-title">HR Payroll System</div>
+                <div class="app-subtitle">MTBC CoreCloud</div>
+            </div>
         </div>
+        <div class="header-right">
+            {% if user.is_authenticated %}
+            <span class="user-badge"><i class="fas fa-user-circle me-1"></i> {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="btn-logout">
+                <i class="fas fa-sign-out-alt me-1"></i> Logout
+            </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
         <div class="sidebar-heading">Main</div>
         <nav class="nav flex-column">
             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
@@ -96,18 +126,11 @@
         </nav>
     </div>
 
+    <!-- Main Content -->
     <div class="content-wrapper">
         <div class="topbar">
             <div>
                 <h5 class="mb-0 text-gray-800">{% block page_title %}Dashboard{% endblock %}</h5>
-            </div>
-            <div class="d-flex align-items-center">
-                {% if user.is_authenticated %}
-                <span class="me-3"><i class="fas fa-user-circle"></i> {{ user.username }}</span>
-                <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-                {% endif %}
             </div>
         </div>
 
