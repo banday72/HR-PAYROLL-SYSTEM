@@ -105,7 +105,7 @@ def calculate_auto_payroll(employee, month, year, policy):
     gross_salary = basic_earned + total_allowances
 
     boutique_issues = BoutiqueIssue.objects.filter(employee=employee, is_deducted=False)
-    boutique_deduction = sum(issue.total_price for issue in boutique_issues)
+    boutique_deduction = D(str(sum(issue.total_price for issue in boutique_issues)))
 
     active_loans = BudgetLoan.objects.filter(employee=employee, is_active=True)
     loan_deduction = D('0')
@@ -152,8 +152,6 @@ def calculate_auto_payroll(employee, month, year, policy):
             'basic_earned': basic_earned.quantize(D('0.01')),
             'attendance_deduction': attendance_deduction.quantize(D('0.01')),
             'late_deduction': late_deduction.quantize(D('0.01')),
-            'boutique_deduction': boutique_deduction.quantize(D('0.01')),
-            'loan_deduction': loan_deduction.quantize(D('0.01')),
             'performance_bonus': performance_bonus.quantize(D('0.01')),
             'bonus_percentage': bonus_pct,
             'medical_allowance': medical,
