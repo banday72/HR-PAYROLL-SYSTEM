@@ -96,7 +96,7 @@ class Payroll(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.employee.employee_id} - {self.get_month_display()} {self.year} - ${self.net_salary}"
+        return f"{self.employee.employee_id} - {self.get_month_display()} {self.year} - Rs. {self.net_salary}"
 
     def calculate_net_salary(self):
         self.net_salary = self.basic_salary + self.allowances - self.deductions - self.tax
@@ -117,7 +117,7 @@ class BoutiqueProduct(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.name} - ${self.price} (Stock: {self.stock})"
+        return f"{self.name} - Rs. {self.price} (Stock: {self.stock})"
 
     class Meta:
         ordering = ['name']
@@ -136,7 +136,7 @@ class BoutiqueIssue(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.employee.employee_id} - {self.product.name} x{self.quantity} (${self.total_price})"
+        return f"{self.employee.employee_id} - {self.product.name} x{self.quantity} (Rs. {self.total_price})"
 
     def save(self, *args, **kwargs):
         self.total_price = self.product.price * self.quantity
@@ -159,7 +159,7 @@ class BudgetLoan(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.employee.employee_id} - Loan ${self.loan_amount} (${self.remaining_amount} remaining)"
+        return f"{self.employee.employee_id} - Loan Rs. {self.loan_amount} (Rs. {self.remaining_amount} remaining)"
 
     def save(self, *args, **kwargs):
         if not self.pk:

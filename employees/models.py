@@ -31,6 +31,7 @@ class Employee(models.Model):
     designation = models.CharField(max_length=100, blank=True)
     date_of_joining = models.DateField()
     salary = models.DecimalField(max_digits=10, decimal_places=2)
+    city = models.CharField(max_length=100, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

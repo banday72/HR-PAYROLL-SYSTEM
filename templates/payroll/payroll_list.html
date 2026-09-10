@@ -62,11 +62,11 @@
                     <tr>
                         <td>{{ payroll.employee.employee_id }} - {{ payroll.employee.full_name }}</td>
                         <td>{{ payroll.get_month_display }} {{ payroll.year }}</td>
-                        <td>${{ payroll.basic_salary|floatformat:2 }}</td>
-                        <td>${{ payroll.allowances|floatformat:2 }}</td>
-                        <td>${{ payroll.deductions|floatformat:2 }}</td>
-                        <td>${{ payroll.tax|floatformat:2 }}</td>
-                        <td><strong>${{ payroll.net_salary|floatformat:2 }}</strong></td>
+                        <td>Rs. {{ payroll.basic_salary|floatformat:2 }}</td>
+                         <td>Rs. {{ payroll.allowances|floatformat:2 }}</td>
+                         <td>Rs. {{ payroll.deductions|floatformat:2 }}</td>
+                         <td>Rs. {{ payroll.tax|floatformat:2 }}</td>
+                         <td><strong>Rs. {{ payroll.net_salary|floatformat:2 }}</strong></td>
                         <td><span class="badge bg-{% if payroll.status == 'paid' %}success{% elif payroll.status == 'processed' %}info{% elif payroll.status == 'draft' %}warning{% else %}secondary{% endif %}">{{ payroll.get_status_display }}</span></td>
                         <td>
                             {% if payroll.generated_type == 'auto' %}

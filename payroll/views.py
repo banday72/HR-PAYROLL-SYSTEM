@@ -181,19 +181,19 @@ def payroll_list(request):
                 payrolls = payrolls.filter(year=form.cleaned_data['year'])
             if form.cleaned_data.get('status'):
                 payrolls = payrolls.filter(status=form.cleaned_data['status'])
-        return render(request, 'payroll/payroll_list.html', {
-            'payrolls': payrolls,
-            'filter_form': form,
-            'is_employee': False,
-        })
 
-    paginator = Paginator(payrolls, 15)
+    paginator = Paginator(payrolls, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'payroll/payroll_list.html', {
+
+    ctx = {
         'payrolls': page_obj,
-        'is_employee': True,
-    })
+        'page_obj': page_obj,
+        'is_employee': employee is not None,
+    }
+    if not employee:
+        ctx['filter_form'] = PayrollFilterForm(request.GET)
+    return render(request, 'payroll/payroll_list.html', ctx)
 
 
 @login_required
@@ -401,7 +401,7 @@ def salary_slip_pdf(request, pk):
         elements.append(Spacer(1, 15))
 
     salary_data = [
-        ['Earnings', 'Amount ($)', 'Deductions', 'Amount ($)'],
+        ['Earnings', 'Amount (Rs.)', 'Deductions', 'Amount (Rs.)'],
         ['Basic Salary', f'{payroll.basic_salary:,.2f}', 'Deductions', f'{payroll.deductions:,.2f}'],
         ['Allowances', f'{payroll.allowances:,.2f}', 'Tax', f'{payroll.tax:,.2f}'],
         ['', '', 'Total Deductions', f'{payroll.deductions + payroll.tax:,.2f}'],
@@ -426,7 +426,7 @@ def salary_slip_pdf(request, pk):
     elements.append(Spacer(1, 20))
 
     net_style = ParagraphStyle('Net', parent=styles['Heading2'], alignment=1, textColor=colors.HexColor('#4e73df'))
-    elements.append(Paragraph(f"NET SALARY: ${payroll.net_salary:,.2f}", net_style))
+    elements.append(Paragraph(f"NET SALARY: Rs. {payroll.net_salary:,.2f}", net_style))
     elements.append(Spacer(1, 30))
 
     elements.append(Paragraph("This is a computer-generated salary slip.", styles['Normal']))

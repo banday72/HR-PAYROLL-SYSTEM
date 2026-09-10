@@ -7,13 +7,13 @@
         <div class="card stat-card border-warning" style="min-width:180px">
             <div class="card-body">
                 <div class="text-xs text-warning fw-bold text-uppercase">Pending Amount</div>
-                <div class="h5 mb-0 mt-1">${{ total_loan|floatformat:2 }}</div>
+                <div class="h5 mb-0 mt-1">Rs. {{ total_loan|floatformat:2 }}</div>
             </div>
         </div>
         <div class="card stat-card border-success" style="min-width:180px">
             <div class="card-body">
                 <div class="text-xs text-success fw-bold text-uppercase">Total Deducted</div>
-                <div class="h5 mb-0 mt-1">${{ total_deducted|floatformat:2 }}</div>
+                <div class="h5 mb-0 mt-1">Rs. {{ total_deducted|floatformat:2 }}</div>
             </div>
         </div>
     </div>
@@ -44,9 +44,9 @@
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td><strong>{{ loan.employee.employee_id }}</strong> - {{ loan.employee.first_name }} {{ loan.employee.last_name }}</td>
-                        <td>${{ loan.loan_amount|floatformat:2 }}</td>
-                        <td>${{ loan.monthly_deduction|floatformat:2 }}</td>
-                        <td><strong>${{ loan.remaining_amount|floatformat:2 }}</strong></td>
+                        <td>Rs. {{ loan.loan_amount|floatformat:2 }}</td>
+                        <td>Rs. {{ loan.monthly_deduction|floatformat:2 }}</td>
+                        <td><strong>Rs. {{ loan.remaining_amount|floatformat:2 }}</strong></td>
                         <td>{{ loan.reason|truncatewords:10 }}</td>
                         <td>
                             {% if loan.is_active %}

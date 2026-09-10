@@ -4,10 +4,13 @@
 
 {% block content %}
 <div class="d-flex justify-content-between mb-3">
-    <form class="d-flex" method="get" style="max-width:300px">
-        <input type="text" name="search" class="form-control me-2" placeholder="Search employees..." value="{{ search }}">
-        <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search"></i></button>
-    </form>
+    <div class="d-flex align-items-center gap-3">
+        <form class="d-flex" method="get" style="max-width:300px">
+            <input type="text" name="search" class="form-control me-2" placeholder="Search employees..." value="{{ search }}">
+            <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search"></i></button>
+        </form>
+        <span class="badge bg-primary fs-6">{{ employees.paginator.count }} Employee{{ employees.paginator.count|pluralize }}</span>
+    </div>
     <a href="{% url 'employee_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Employee</a>
 </div>
 <div class="card shadow">
@@ -34,7 +37,7 @@
                         <td>{{ emp.email }}</td>
                         <td>{{ emp.department|default:"-" }}</td>
                         <td>{{ emp.designation|default:"-" }}</td>
-                        <td>${{ emp.salary|floatformat:2 }}</td>
+                        <td>Rs. {{ emp.salary|floatformat:2 }}</td>
                         <td><span class="badge bg-{{ emp.status|yesno:'success,warning,danger' }}">{{ emp.get_status_display }}</span></td>
                         <td>
                             <a href="{% url 'employee_update' emp.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>

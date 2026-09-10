@@ -63,11 +63,12 @@ def employee_list(request):
             Q(first_name__icontains=search) |
             Q(last_name__icontains=search)
         )
-    paginator = Paginator(employees, 15)
+    paginator = Paginator(employees, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     return render(request, 'employees/employee_list.html', {
         'employees': page_obj,
+        'page_obj': page_obj,
         'search': search,
     })
 

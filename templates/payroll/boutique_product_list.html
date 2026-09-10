@@ -31,7 +31,7 @@
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td><strong>{{ product.name }}</strong></td>
-                        <td>${{ product.price|floatformat:2 }}</td>
+                        <td>Rs. {{ product.price|floatformat:2 }}</td>
                         <td>
                             {% if product.stock > 0 %}
                                 <span class="badge bg-success">{{ product.stock }}</span>

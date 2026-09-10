@@ -13,7 +13,7 @@
         <div class="card stat-card border-success" style="min-width:180px">
             <div class="card-body">
                 <div class="text-xs text-success fw-bold text-uppercase">Grand Total Salary</div>
-                <div class="h5 mb-0 mt-1">${{ grand_total|floatformat:2 }}</div>
+                <div class="h5 mb-0 mt-1">Rs. {{ grand_total|floatformat:2 }}</div>
             </div>
         </div>
     </div>
@@ -33,11 +33,11 @@
                 </div>
                 <div class="mb-2">
                     <span class="text-muted">Total Salary:</span>
-                    <strong class="text-success">${{ d.total_salary|floatformat:2 }}</strong>
+                    <strong class="text-success">Rs. {{ d.total_salary|floatformat:2 }}</strong>
                 </div>
                 <div class="mb-2">
                     <span class="text-muted">Avg Salary:</span>
-                    <strong>${{ d.avg_salary }}</strong>
+                    <strong>Rs. {{ d.avg_salary }}</strong>
                 </div>
                 <div class="border-top pt-2 mt-2">
                     <small class="text-muted">Employees:</small>
@@ -77,8 +77,8 @@
                     <tr>
                         <td><strong>{{ d.department.name }}</strong></td>
                         <td>{{ d.employee_count }}</td>
-                        <td class="text-success"><strong>${{ d.total_salary|floatformat:2 }}</strong></td>
-                        <td>${{ d.avg_salary }}</td>
+                        <td class="text-success"><strong>Rs. {{ d.total_salary|floatformat:2 }}</strong></td>
+                        <td>Rs. {{ d.avg_salary }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -86,8 +86,8 @@
                     <tr class="table-primary">
                         <td><strong>TOTAL</strong></td>
                         <td><strong>{{ total_employees }}</strong></td>
-                        <td><strong>${{ grand_total|floatformat:2 }}</strong></td>
-                        <td><strong>{% if total_employees > 0 %}${{ grand_total|floatformat:2 }}{% else %}$0{% endif %}</strong></td>
+                        <td><strong>Rs. {{ grand_total|floatformat:2 }}</strong></td>
+                        <td><strong>{% if total_employees > 0 %}Rs. {{ grand_total|floatformat:2 }}{% else %}Rs. 0{% endif %}</strong></td>
                     </tr>
                 </tfoot>
             </table>

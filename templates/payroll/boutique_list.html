@@ -7,13 +7,13 @@
         <div class="card stat-card border-warning" style="min-width:180px">
             <div class="card-body">
                 <div class="text-xs text-warning fw-bold text-uppercase">Pending Deduction</div>
-                <div class="h5 mb-0 mt-1">${{ total_pending|floatformat:2 }}</div>
+                <div class="h5 mb-0 mt-1">Rs. {{ total_pending|floatformat:2 }}</div>
             </div>
         </div>
         <div class="card stat-card border-success" style="min-width:180px">
             <div class="card-body">
                 <div class="text-xs text-success fw-bold text-uppercase">Total Deducted</div>
-                <div class="h5 mb-0 mt-1">${{ total_deducted|floatformat:2 }}</div>
+                <div class="h5 mb-0 mt-1">Rs. {{ total_deducted|floatformat:2 }}</div>
             </div>
         </div>
     </div>
@@ -45,7 +45,7 @@
                         <td>{{ forloop.counter }}</td>
                         <td><strong>{{ item.employee.employee_id }}</strong> - {{ item.employee.first_name }} {{ item.employee.last_name }}</td>
                         <td>{{ item.item_name }}</td>
-                        <td><strong>${{ item.item_price|floatformat:2 }}</strong></td>
+                        <td><strong>Rs. {{ item.item_price|floatformat:2 }}</strong></td>
                         <td>{{ item.purchase_date|date:"d M Y" }}</td>
                         <td>
                             {% if item.is_deducted %}

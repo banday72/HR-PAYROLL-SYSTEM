@@ -25,10 +25,10 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col me-2">
                         <div class="text-success fw-bold text-uppercase mb-1">Grand Total ({{ year }})</div>
-                        <div class="text-gray-800 h5 mb-0">${{ grand_total|floatformat:2 }}</div>
+                        <div class="text-gray-800 h5 mb-0">Rs. {{ grand_total|floatformat:2 }}</div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -73,8 +73,8 @@
                             {% if item.month == 1 %}January{% elif item.month == 2 %}February{% elif item.month == 3 %}March{% elif item.month == 4 %}April{% elif item.month == 5 %}May{% elif item.month == 6 %}June{% elif item.month == 7 %}July{% elif item.month == 8 %}August{% elif item.month == 9 %}September{% elif item.month == 10 %}October{% elif item.month == 11 %}November{% elif item.month == 12 %}December{% endif %}
                         </td>
                         <td>{{ item.employee_count }}</td>
-                        <td><strong>${{ item.total_salary|floatformat:2 }}</strong></td>
-                        <td>${{ item.avg_salary|floatformat:2 }}</td>
+                        <td><strong>Rs. {{ item.total_salary|floatformat:2 }}</strong></td>
+                        <td>Rs. {{ item.avg_salary|floatformat:2 }}</td>
                     </tr>
                     {% empty %}
                     <tr><td colspan="4" class="text-center text-muted">No payroll data for {{ year }}.</td></tr>

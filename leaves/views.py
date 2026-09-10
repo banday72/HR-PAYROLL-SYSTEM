@@ -19,12 +19,13 @@ def leave_list(request):
     if status_filter:
         leaves = leaves.filter(status=status_filter)
 
-    paginator = Paginator(leaves, 15)
+    paginator = Paginator(leaves, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'leaves/leave_list.html', {
         'leaves': page_obj,
+        'page_obj': page_obj,
         'status_filter': status_filter,
         'is_employee': employee is not None,
     })

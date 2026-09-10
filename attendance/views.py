@@ -25,19 +25,19 @@ def attendance_list(request):
                 attendance = attendance.filter(employee__employee_id__icontains=form.cleaned_data['employee'])
             if form.cleaned_data.get('status'):
                 attendance = attendance.filter(status=form.cleaned_data['status'])
-        return render(request, 'attendance/attendance_list.html', {
-            'attendance': attendance,
-            'filter_form': form,
-            'is_employee': False,
-        })
 
-    paginator = Paginator(attendance, 15)
+    paginator = Paginator(attendance, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'attendance/attendance_list.html', {
+
+    ctx = {
         'attendance': page_obj,
-        'is_employee': True,
-    })
+        'page_obj': page_obj,
+        'is_employee': employee is not None,
+    }
+    if not employee:
+        ctx['filter_form'] = AttendanceFilterForm(request.GET)
+    return render(request, 'attendance/attendance_list.html', ctx)
 
 
 @login_required

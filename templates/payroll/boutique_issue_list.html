@@ -7,13 +7,13 @@
         <div class="card stat-card border-warning" style="min-width:180px">
             <div class="card-body">
                 <div class="text-xs text-warning fw-bold text-uppercase">Pending Deduction</div>
-                <div class="h5 mb-0 mt-1">${{ total_pending|floatformat:2 }}</div>
+                <div class="h5 mb-0 mt-1">Rs. {{ total_pending|floatformat:2 }}</div>
             </div>
         </div>
         <div class="card stat-card border-success" style="min-width:180px">
             <div class="card-body">
                 <div class="text-xs text-success fw-bold text-uppercase">Total Deducted</div>
-                <div class="h5 mb-0 mt-1">${{ total_deducted|floatformat:2 }}</div>
+                <div class="h5 mb-0 mt-1">Rs. {{ total_deducted|floatformat:2 }}</div>
             </div>
         </div>
     </div>
@@ -47,7 +47,7 @@
                         <td><strong>{{ issue.employee.employee_id }}</strong> - {{ issue.employee.first_name }}</td>
                         <td>{{ issue.product.name }}</td>
                         <td>{{ issue.quantity }}</td>
-                        <td><strong>${{ issue.total_price|floatformat:2 }}</strong></td>
+                        <td><strong>Rs. {{ issue.total_price|floatformat:2 }}</strong></td>
                         <td>{{ issue.issue_date|date:"d M Y" }}</td>
                         <td>{{ issue.issued_by }}</td>
                         <td>

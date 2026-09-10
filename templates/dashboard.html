@@ -53,10 +53,10 @@
                 <div class="row no-gutters align-items-center">
                     <div class="col me-2">
                         <div class="text-success fw-bold text-uppercase mb-1">My Salary</div>
-                        <div class="h5 mb-0">${{ employee.salary|floatformat:2 }}</div>
+                        <div class="h5 mb-0">Rs. {{ employee.salary|floatformat:2 }}</div>
                     </div>
                     <div class="col-auto">
-                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
                     </div>
                 </div>
             </div>
@@ -130,11 +130,11 @@
                             {% for p in my_payrolls %}
                             <tr>
                                 <td>{{ p.get_month_display }} {{ p.year }}</td>
-                                <td>${{ p.basic_salary|floatformat:2 }}</td>
-                                <td>${{ p.allowances|floatformat:2 }}</td>
-                                <td>${{ p.deductions|floatformat:2 }}</td>
-                                <td>${{ p.tax|floatformat:2 }}</td>
-                                <td><strong>${{ p.net_salary|floatformat:2 }}</strong></td>
+                                <td>Rs. {{ p.basic_salary|floatformat:2 }}</td>
+                                 <td>Rs. {{ p.allowances|floatformat:2 }}</td>
+                                 <td>Rs. {{ p.deductions|floatformat:2 }}</td>
+                                 <td>Rs. {{ p.tax|floatformat:2 }}</td>
+                                 <td><strong>Rs. {{ p.net_salary|floatformat:2 }}</strong></td>
                                 <td><span class="badge bg-{% if p.status == 'paid' %}success{% elif p.status == 'processed' %}info{% else %}warning{% endif %}">{{ p.get_status_display }}</span></td>
                                 <td><a href="{% url 'salary_slip' p.pk %}" class="btn btn-sm btn-outline-info">View</a></td>
                             </tr>
