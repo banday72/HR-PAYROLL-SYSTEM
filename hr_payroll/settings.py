@@ -3,14 +3,17 @@ Django settings for hr_payroll project.
 """
 
 import os
-import dj_database_url
 from pathlib import Path
-from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+except ImportError:
+    pass
+
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-pvtx-a7-_+*1kz%yr5(@2wxv(f^t0b_h4n-q87ye+9&j9qb+bm')
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
@@ -43,7 +46,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'hr_payroll.middleware.RateLimitMiddleware',
 ]
 
 ROOT_URLCONF = 'hr_payroll.urls'
@@ -71,7 +73,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'neondb'),
         'USER': os.environ.get('DB_USER', 'neondb_owner'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'npg_adAkM6ys7IbP'),
         'HOST': os.environ.get('DB_HOST', 'ep-patient-paper-a5ytpg93-pooler.us-east-2.aws.neon.tech'),
         'PORT': os.environ.get('DB_PORT', '5432'),
         'OPTIONS': {
@@ -117,25 +119,3 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'activity.log',
-        },
-    },
-    'loggers': {
-        'employees': {
-            'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-    },
-}
-
-MAX_LOGIN_ATTEMPTS = 5
-LOGIN_LOCKOUT_SECONDS = 300
