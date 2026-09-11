@@ -23,28 +23,28 @@ if not User.objects.filter(username='admin').exists():
     print("Created superuser: admin / admin123")
 
 # Create HR Manager
-if not Employee.objects.filter(employee_id='GM001').exists():
+if not Employee.objects.filter(employee_id='HM001').exists():
     hr_dept, _ = Department.objects.get_or_create(name='Human Resources', defaults={'description': 'HR Department'})
-    gm_user, gm_created = User.objects.get_or_create(
-        username='GM001',
+    hr_user, hr_created = User.objects.get_or_create(
+        username='HM001',
         defaults={
-            'email': 'gm.manager@company.com',
-            'first_name': 'GM',
+            'email': 'hr.manager@company.com',
+            'first_name': 'HR',
             'last_name': 'Manager',
             'is_staff': False,
         }
     )
-    if gm_created:
-        gm_user.set_password('gm123')
-        gm_user.save()
-    gm_emp = Employee.objects.create(
-        employee_id='GM001',
-        first_name='GM',
+    if hr_created:
+        hr_user.set_password('hm123')
+        hr_user.save()
+    hr_emp = Employee.objects.create(
+        employee_id='HM001',
+        first_name='HR',
         last_name='Manager',
-        email='gm.manager@company.com',
+        email='hr.manager@company.com',
         phone='0300-1234567',
         department=hr_dept,
-        designation='General Manager',
+        designation='HR Manager',
         date_of_joining=date(2022, 1, 1),
         salary=150000,
         status='active',
@@ -52,9 +52,9 @@ if not Employee.objects.filter(employee_id='GM001').exists():
         is_authorized=True,
         approved_by_manager=True,
     )
-    gm_emp.user = gm_user
-    gm_emp.save()
-    print("Created HR Manager: GM001 / gm123")
+    hr_emp.user = hr_user
+    hr_emp.save()
+    print("Created HR Manager: HM001 / hm123")
 
 # Create payroll policy
 policy, _ = PayrollPolicy.objects.get_or_create(
