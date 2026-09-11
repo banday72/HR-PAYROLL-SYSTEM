@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
@@ -256,8 +257,16 @@ def authorized_users(request):
 def toggle_authorize(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
+        new_password = request.POST.get('new_password', '').strip()
         employee.is_authorized = not employee.is_authorized
         employee.save()
-        status = 'authorized' if employee.is_authorized else 'deauthorized'
-        messages.success(request, f'{employee.full_name} has been {status}.')
+        if employee.is_authorized:
+            if new_password and employee.user:
+                employee.user.set_password(new_password)
+                employee.user.save()
+                messages.success(request, f'{employee.full_name} authorized. Username: {employee.employee_id} | Password: {new_password}')
+            else:
+                messages.success(request, f'{employee.full_name} authorized. Username: {employee.employee_id} | Default password: employee123')
+        else:
+            messages.warning(request, f'{employee.full_name} has been deauthorized. They can no longer login.')
     return redirect('authorized_users')

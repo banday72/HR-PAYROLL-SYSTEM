@@ -3,15 +3,74 @@
 {% block page_title %}Authorized Users Management{% endblock %}
 
 {% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-info-circle me-1"></i> Role Permissions Guide</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-success mb-2">
+                            <div class="card-body text-center py-2">
+                                <span class="badge bg-success fs-6 mb-2">HR / Manager</span>
+                                <ul class="list-unstyled mb-0 small text-start">
+                                    <li><i class="fas fa-check text-success me-1"></i> Manage Employees (Add/Edit/Delete)</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Manage Departments</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Authorize/Deauthorize Users</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Process Payroll</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Approve/Reject Leaves</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> View All Reports</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Manage Boutique & Loans</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-secondary mb-2">
+                            <div class="card-body text-center py-2">
+                                <span class="badge bg-secondary fs-6 mb-2">Employee</span>
+                                <ul class="list-unstyled mb-0 small text-start">
+                                    <li><i class="fas fa-check text-success me-1"></i> View Own Dashboard</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Mark Attendance (Clock In/Out)</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Apply for Leave</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> View Own Salary Slips</li>
+                                    <li><i class="fas fa-check text-success me-1"></i> Change Own Password</li>
+                                    <li><i class="fas fa-times text-danger me-1"></i> Cannot manage other employees</li>
+                                    <li><i class="fas fa-times text-danger me-1"></i> Cannot process payroll</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-danger mb-2">
+                            <div class="card-body text-center py-2">
+                                <span class="badge bg-danger fs-6 mb-2">Unauthorized User</span>
+                                <ul class="list-unstyled mb-0 small text-start">
+                                    <li><i class="fas fa-times text-danger me-1"></i> <strong>Cannot login at all</strong></li>
+                                    <li><i class="fas fa-times text-danger me-1"></i> Blocked by authentication system</li>
+                                    <li><i class="fas fa-times text-danger me-1"></i> Must be authorized by HR first</li>
+                                    <li class="mt-2"><i class="fas fa-info text-primary me-1"></i> <em>Click "Authorize" below to grant access</em></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-shield-alt me-1"></i> Filter</h6>
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-shield-alt me-1"></i> Search & Filter</h6>
     </div>
     <div class="card-body">
         <form method="get" class="row g-2 align-items-end">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label small">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Employee ID or Name..." value="{{ search }}">
+                <input type="text" name="search" class="form-control" placeholder="ID or Name..." value="{{ search }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label small">Authorization Status</label>
@@ -37,9 +96,6 @@
         <span class="badge bg-primary fs-6">{{ page_obj.paginator.count }} User{{ page_obj.paginator.count|pluralize }}</span>
     </div>
     <div class="card-body">
-        <div class="alert alert-info mb-3">
-            <i class="fas fa-info-circle me-1"></i> <strong>Only authorized users can login.</strong> Toggle the button below to grant or revoke login access.
-        </div>
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead class="table-light">
@@ -48,8 +104,8 @@
                         <th>Name</th>
                         <th>Department</th>
                         <th>Role</th>
+                        <th>Login Username</th>
                         <th>Status</th>
-                        <th>Authorized</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -69,11 +125,9 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if emp.status == 'active' %}
-                            <span class="badge bg-success">Active</span>
-                            {% else %}
-                            <span class="badge bg-secondary">{{ emp.status|title }}</span>
-                            {% endif %}
+                            <code>{{ emp.employee_id }}</code>
+                            <br>
+                            <small class="text-muted">Password: employee123</small>
                         </td>
                         <td>
                             {% if emp.is_authorized %}
@@ -83,20 +137,58 @@
                             {% endif %}
                         </td>
                         <td>
+                            {% if emp.is_authorized %}
                             <form method="post" action="{% url 'toggle_authorize' emp.pk %}" style="display:inline;">
                                 {% csrf_token %}
-                                {% if emp.is_authorized %}
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Revoke Access">
                                     <i class="fas fa-ban me-1"></i> Revoke
                                 </button>
-                                {% else %}
-                                <button type="submit" class="btn btn-sm btn-outline-success" title="Grant Access">
-                                    <i class="fas fa-check me-1"></i> Authorize
-                                </button>
-                                {% endif %}
                             </form>
+                            {% else %}
+                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#authModal{{ emp.pk }}" title="Grant Access">
+                                <i class="fas fa-check me-1"></i> Authorize
+                            </button>
+                            {% endif %}
                         </td>
                     </tr>
+
+                    <!-- Authorization Modal with Password Option -->
+                    {% if not emp.is_authorized %}
+                    <div class="modal fade" id="authModal{{ emp.pk }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-success text-white">
+                                    <h5 class="modal-title"><i class="fas fa-user-check me-2"></i>Authorize {{ emp.full_name }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="post" action="{% url 'toggle_authorize' emp.pk %}">
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="alert alert-info">
+                                            <strong>Login Credentials for {{ emp.full_name }}:</strong><br>
+                                            <strong>Username:</strong> <code>{{ emp.employee_id }}</code><br>
+                                            <strong>Password:</strong> Leave blank for default (<code>employee123</code>) or set a new one below.
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Set Custom Password (optional)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                                <input type="password" name="new_password" class="form-control" placeholder="Leave blank for default: employee123">
+                                            </div>
+                                            <small class="text-muted">Min 8 characters. Leave empty to use default password.</small>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-check me-1"></i> Authorize & Save
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     {% empty %}
                     <tr><td colspan="7" class="text-center py-4">No employees found.</td></tr>
                     {% endfor %}
