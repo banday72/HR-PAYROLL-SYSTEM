@@ -98,6 +98,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 3600
+
+AUTHENTICATION_BACKENDS = [
+    'hr_payroll.backends.AuthorizedUserBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 # Media files
 MEDIA_URL = '/media/'

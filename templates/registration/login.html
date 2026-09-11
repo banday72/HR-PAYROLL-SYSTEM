@@ -40,7 +40,8 @@
         <div class="card-body p-4">
             {% if form.errors %}
             <div class="alert alert-danger">
-                Invalid username or password. Please try again.
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                Invalid username or password. Only authorized users can login. Contact HR if you need access.
             </div>
             {% endif %}
             <form method="post">

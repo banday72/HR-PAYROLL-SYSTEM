@@ -12,4 +12,7 @@ urlpatterns = [
     path('departments/create/', views.department_create, name='department_create'),
     path('departments/<int:pk>/edit/', views.department_update, name='department_update'),
     path('departments/<int:pk>/delete/', views.department_delete, name='department_delete'),
+    path('change-password/', views.change_password, name='change_password'),
+    path('authorized-users/', views.authorized_users, name='authorized_users'),
+    path('authorized-users/<int:pk>/toggle/', views.toggle_authorize, name='toggle_authorize'),
 ]

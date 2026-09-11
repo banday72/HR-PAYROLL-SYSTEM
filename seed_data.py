@@ -91,6 +91,7 @@ for emp_id, first, last, email, gender, dept_name, designation, salary in employ
             'date_of_joining': date(2023, 1, 15),
             'salary': salary,
             'status': 'active',
+            'is_authorized': True,
         }
     )
     # Create user account for employee

@@ -68,6 +68,9 @@
             {% if user.is_authenticated %}
             {% if is_hr %}<span class="badge bg-success me-1">HR</span>{% else %}<span class="badge bg-secondary me-1">Employee</span>{% endif %}
             <span class="user-badge"><i class="fas fa-user-circle me-1"></i> {{ user.username }}</span>
+            <a href="{% url 'change_password' %}" class="btn btn-sm" style="background:#2980b9;color:white;padding:0.35rem 0.9rem;border-radius:20px;font-size:0.82rem;text-decoration:none;font-weight:500;">
+                <i class="fas fa-key me-1"></i> Change Password
+            </a>
             <a href="{% url 'logout' %}" class="btn-logout">
                 <i class="fas fa-sign-out-alt me-1"></i> Logout
             </a>
@@ -90,6 +93,9 @@
             </a>
             <a class="nav-link {% if 'department' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'department_list' %}">
                 <i class="fas fa-building"></i> Departments
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'authorized_users' %}active{% endif %}" href="{% url 'authorized_users' %}">
+                <i class="fas fa-user-shield"></i> Authorized Users
             </a>
         </nav>
         {% endif %}

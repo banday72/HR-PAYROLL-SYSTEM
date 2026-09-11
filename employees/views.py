@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
@@ -124,7 +126,7 @@ def employee_create(request):
             )
             emp.user = user
             emp.save()
-            messages.success(request, f'Employee created. Login: {emp.employee_id} / employee123')
+            messages.success(request, f'Employee created. Login: {emp.employee_id} / employee123. Go to Authorized Users to grant login access.')
             return redirect('employee_list')
     else:
         form = EmployeeForm()
@@ -204,3 +206,58 @@ def department_delete(request, pk):
         messages.success(request, 'Department deleted successfully.')
         return redirect('department_list')
     return render(request, 'employees/department_confirm_delete.html', {'department': department})
+
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password has been changed successfully.')
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'registration/change_password.html', {'form': form})
+
+
+@login_required
+@hr_required
+def authorized_users(request):
+    employees = Employee.objects.select_related('user', 'department').all()
+    search = request.GET.get('search', '')
+    auth_filter = request.GET.get('auth_filter', '')
+    if search:
+        employees = employees.filter(
+            Q(employee_id__icontains=search) |
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search)
+        )
+    if auth_filter == 'authorized':
+        employees = employees.filter(is_authorized=True)
+    elif auth_filter == 'unauthorized':
+        employees = employees.filter(is_authorized=False)
+    paginator = Paginator(employees, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'employees/authorized_users.html', {
+        'employees': page_obj,
+        'page_obj': page_obj,
+        'search': search,
+        'auth_filter': auth_filter,
+    })
+
+
+@login_required
+@hr_required
+def toggle_authorize(request, pk):
+    employee = get_object_or_404(Employee, pk=pk)
+    if request.method == 'POST':
+        employee.is_authorized = not employee.is_authorized
+        employee.save()
+        status = 'authorized' if employee.is_authorized else 'deauthorized'
+        messages.success(request, f'{employee.full_name} has been {status}.')
+    return redirect('authorized_users')
