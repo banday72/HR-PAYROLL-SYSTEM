@@ -108,14 +108,19 @@
             </a>
         </nav>
         {% endif %}
-        <div class="sidebar-heading">My Records</div>
+        <div class="sidebar-heading">{% if is_hr %}My Records{% else %}My Portal{% endif %}</div>
         <nav class="nav flex-column">
-            <a class="nav-link {% if 'attendance' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'attendance_list' %}">
-                <i class="fas fa-clock"></i> Attendance
+            <a class="nav-link {% if request.resolver_match.url_name == 'attendance_list' %}active{% endif %}" href="{% url 'attendance_list' %}">
+                <i class="fas fa-clock"></i> {% if is_hr %}Attendance{% else %}My Attendance{% endif %}
             </a>
-            <a class="nav-link {% if 'leave' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'leave_list' %}">
-                <i class="fas fa-calendar-alt"></i> Leaves
+            <a class="nav-link {% if 'leave' in request.resolver_match.url_name and 'type' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'leave_list' %}">
+                <i class="fas fa-calendar-alt"></i> {% if is_hr %}Leaves{% else %}My Leaves{% endif %}
             </a>
+            {% if not is_hr %}
+            <a class="nav-link {% if request.resolver_match.url_name == 'salary_slip' %}active{% endif %}" href="{% url 'dashboard' %}#my-payrolls">
+                <i class="fas fa-money-bill-wave"></i> My Salary Slips
+            </a>
+            {% endif %}
         </nav>
         {% if is_hr %}
         <div class="sidebar-heading">Payroll</div>

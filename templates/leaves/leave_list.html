@@ -50,8 +50,11 @@
                             {% if not is_employee and leave.status == 'pending' %}
                             <a href="{% url 'leave_approve' leave.pk %}" class="btn btn-sm btn-outline-success"><i class="fas fa-check"></i></a>
                             {% endif %}
-                            {% if leave.status == 'pending' %}
+                            {% if not is_employee and leave.status == 'pending' %}
                             <a href="{% url 'leave_delete' leave.pk %}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                            {% endif %}
+                            {% if is_employee %}
+                            <span class="text-muted small">View Only</span>
                             {% endif %}
                         </td>
                     </tr>
