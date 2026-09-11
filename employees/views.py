@@ -294,24 +294,97 @@ def toggle_authorize(request, pk):
     if request.method == 'POST':
         new_password = request.POST.get('new_password', '').strip()
         employee.is_authorized = not employee.is_authorized
+        if not employee.is_authorized:
+            employee.approved_by_manager = False
+            employee.approved_by = None
+            employee.approved_at = None
         employee.save()
         if employee.is_authorized:
             action = 'authorize'
-            if employee.role not in ('hr', 'manager'):
-                messages.warning(request, f'{employee.full_name} is authorized but has role "{employee.role}". Only HR and Manager roles can login. Change their role to HR/Manager to allow login.')
-            else:
+            if employee.role in ('hr', 'manager'):
+                employee.approved_by_manager = True
+                employee.approved_by = request.user
+                from django.utils import timezone
+                employee.approved_at = timezone.now()
+                employee.save()
                 if new_password and employee.user:
                     employee.user.set_password(new_password)
                     employee.user.save()
-                    messages.success(request, f'{employee.full_name} authorized. Username: {employee.employee_id} | Password: {new_password}')
+                    messages.success(request, f'{employee.full_name} (HR/Manager) authorized directly. Username: {employee.employee_id} | Password: {new_password}')
                 else:
-                    messages.success(request, f'{employee.full_name} authorized. Username: {employee.employee_id} | Default password: employee123')
+                    messages.success(request, f'{employee.full_name} (HR/Manager) authorized directly. Username: {employee.employee_id} | Default password: employee123')
+            else:
+                messages.info(request, f'{employee.full_name} authorized by you. Waiting for Manager approval before they can login.')
         else:
             action = 'deauthorize'
             messages.warning(request, f'{employee.full_name} has been deauthorized. They can no longer login.')
         log_audit(user=request.user, action=action, model_name='Employee',
                   object_id=employee.employee_id, description=f'{action.title()}d {employee.full_name}', request=request)
     return redirect('authorized_users')
+
+
+@login_required
+def pending_approvals(request):
+    employee = get_employee(request.user)
+    is_manager = request.user.is_superuser or (employee and employee.role == 'manager')
+    if not is_manager:
+        messages.error(request, 'Only Managers can access this page.')
+        return redirect('dashboard')
+
+    pending = Employee.objects.select_related('department', 'approved_by').filter(
+        is_authorized=True, approved_by_manager=False, status='active', role='employee'
+    )
+    search = request.GET.get('search', '')
+    if search:
+        pending = pending.filter(
+            Q(employee_id__icontains=search) |
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search)
+        )
+    paginator = Paginator(pending, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'employees/pending_approvals.html', {
+        'pending_employees': page_obj,
+        'page_obj': page_obj,
+        'search': search,
+    })
+
+
+@login_required
+def manager_approve(request, pk):
+    employee_obj = get_employee(request.user)
+    is_manager = request.user.is_superuser or (employee_obj and employee_obj.role == 'manager')
+    if not is_manager:
+        messages.error(request, 'Only Managers can approve authorizations.')
+        return redirect('dashboard')
+
+    emp = get_object_or_404(Employee, pk=pk)
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        if action == 'approve':
+            emp.approved_by_manager = True
+            emp.approved_by = request.user
+            from django.utils import timezone
+            emp.approved_at = timezone.now()
+            emp.save()
+            new_password = request.POST.get('new_password', '').strip()
+            if new_password and emp.user:
+                emp.user.set_password(new_password)
+                emp.user.save()
+                messages.success(request, f'{emp.full_name} approved. They can now login. Username: {emp.employee_id} | Password: {new_password}')
+            else:
+                messages.success(request, f'{emp.full_name} approved. They can now login. Username: {emp.employee_id} | Default password: employee123')
+            log_audit(user=request.user, action='authorize', model_name='Employee',
+                      object_id=emp.employee_id, description=f'Manager approved {emp.full_name}', request=request)
+        elif action == 'reject':
+            emp.is_authorized = False
+            emp.approved_by_manager = False
+            emp.save()
+            messages.warning(request, f'{emp.full_name} authorization rejected.')
+            log_audit(user=request.user, action='deauthorize', model_name='Employee',
+                      object_id=emp.employee_id, description=f'Manager rejected {emp.full_name}', request=request)
+    return redirect('pending_approvals')
 
 
 @login_required

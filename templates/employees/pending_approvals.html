@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Pending Approvals - HR Payroll System{% endblock %}
+{% block page_title %}Pending Manager Approvals{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-check me-1"></i> Approval Instructions</h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning mb-0">
+                    <strong>Manager Approval Required:</strong> HR has authorized these employees. 
+                    As a Manager, you must review and approve them before they can login. 
+                    Set a password for them or they will use the default <code>employee123</code>.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-search me-1"></i> Search</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Employee ID or Name..." value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Search</button>
+            </div>
+            <div class="col-md-1">
+                <a href="{% url 'pending_approvals' %}" class="btn btn-outline-secondary w-100"><i class="fas fa-times"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clock me-1"></i> Pending Approvals</h6>
+        <span class="badge bg-warning text-dark fs-6">{{ page_obj.paginator.count }} Pending</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Designation</th>
+                        <th>Authorized By (HR)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in pending_employees %}
+                    <tr>
+                        <td><strong>{{ emp.employee_id }}</strong></td>
+                        <td>{{ emp.full_name }}</td>
+                        <td>{{ emp.department|default:"-" }}</td>
+                        <td>{{ emp.designation|default:"-" }}</td>
+                        <td>
+                            {% if emp.approved_by %}
+                            <small>{{ emp.approved_by.username }}</small>
+                            {% else %}
+                            <small class="text-muted">HR</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-success me-1" data-bs-toggle="modal" data-bs-target="#approveModal{{ emp.pk }}">
+                                <i class="fas fa-check me-1"></i> Approve
+                            </button>
+                            <form method="post" action="{% url 'manager_approve' emp.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Reject" onclick="return confirm('Reject authorization for {{ emp.full_name }}?')">
+                                    <i class="fas fa-times me-1"></i> Reject
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="approveModal{{ emp.pk }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-success text-white">
+                                    <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Approve {{ emp.full_name }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="post" action="{% url 'manager_approve' emp.pk %}">
+                                    {% csrf_token %}
+                                    <div class="modal-body">
+                                        <div class="alert alert-info">
+                                            <strong>Employee:</strong> {{ emp.full_name }} ({{ emp.employee_id }})<br>
+                                            <strong>Department:</strong> {{ emp.department|default:"-" }}<br>
+                                            <strong>Designation:</strong> {{ emp.designation|default:"-" }}
+                                        </div>
+                                        <div class="alert alert-light">
+                                            <strong>Login Credentials:</strong><br>
+                                            <strong>Username:</strong> <code>{{ emp.employee_id }}</code><br>
+                                            <strong>Password:</strong> Leave blank for default (<code>employee123</code>) or set a new one.
+                                        </div>
+                                        <input type="hidden" name="action" value="approve">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Set Custom Password (optional)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                                <input type="password" name="new_password" class="form-control" placeholder="Leave blank for default: employee123">
+                                            </div>
+                                            <small class="text-muted">Min 8 characters. Leave empty to use default password.</small>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-check me-1"></i> Approve & Save
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-4">
+                        <i class="fas fa-check-circle text-success fa-2x mb-2"></i><br>
+                        No pending approvals. All caught up!
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "includes/pagination.html" %}
+    </div>
+</div>
+{% endblock %}

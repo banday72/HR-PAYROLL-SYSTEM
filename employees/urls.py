@@ -16,5 +16,7 @@ urlpatterns = [
     path('change-password/', views.change_password, name='change_password'),
     path('authorized-users/', views.authorized_users, name='authorized_users'),
     path('authorized-users/<int:pk>/toggle/', views.toggle_authorize, name='toggle_authorize'),
+    path('pending-approvals/', views.pending_approvals, name='pending_approvals'),
+    path('pending-approvals/<int:pk>/action/', views.manager_approve, name='manager_approve'),
     path('audit-log/', views.audit_log_list, name='audit_log'),
 ]

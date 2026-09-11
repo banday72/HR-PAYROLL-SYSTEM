@@ -5,59 +5,33 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-md-12">
-        <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong>Important:</strong> Only users with <strong>HR</strong> or <strong>Manager</strong> role can login. 
-            Regular employees cannot login even if authorized. Change their role first, then authorize.
-        </div>
-    </div>
-</div>
-
-<div class="row mb-4">
-    <div class="col-md-12">
         <div class="card shadow">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-info-circle me-1"></i> Who Can Login?</h6>
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-info-circle me-1"></i> Authorization Flow</h6>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
+                        <div class="card border-primary mb-2">
+                            <div class="card-body text-center py-2">
+                                <span class="badge bg-primary fs-6 mb-2"><i class="fas fa-user-shield me-1"></i> Step 1: HR Authorizes</span>
+                                <p class="small mb-0">HR clicks "Authorize" to grant login request. Employee status becomes <strong>Pending Approval</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-warning mb-2">
+                            <div class="card-body text-center py-2">
+                                <span class="badge bg-warning text-dark fs-6 mb-2"><i class="fas fa-clipboard-check me-1"></i> Step 2: Manager Approves</span>
+                                <p class="small mb-0">Manager reviews and approves. Employee status becomes <strong>Approved</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="card border-success mb-2">
                             <div class="card-body text-center py-2">
-                                <span class="badge bg-success fs-6 mb-2"><i class="fas fa-check-circle me-1"></i> HR / Manager</span>
-                                <p class="small mb-1"><strong>CAN LOGIN</strong></p>
-                                <ul class="list-unstyled mb-0 small text-start">
-                                    <li><i class="fas fa-check text-success me-1"></i> Manage Employees & Departments</li>
-                                    <li><i class="fas fa-check text-success me-1"></i> Authorize/Deauthorize Users</li>
-                                    <li><i class="fas fa-check text-success me-1"></i> Process Payroll</li>
-                                    <li><i class="fas fa-check text-success me-1"></i> Approve Leaves & Reports</li>
-                                    <li><i class="fas fa-check text-success me-1"></i> Manage Boutique & Loans</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-danger mb-2">
-                            <div class="card-body text-center py-2">
-                                <span class="badge bg-danger fs-6 mb-2"><i class="fas fa-times-circle me-1"></i> Employee</span>
-                                <p class="small mb-1"><strong>CANNOT LOGIN</strong></p>
-                                <ul class="list-unstyled mb-0 small text-start">
-                                    <li><i class="fas fa-times text-danger me-1"></i> Login blocked even if authorized</li>
-                                    <li><i class="fas fa-info text-primary me-1"></i> Must change role to HR/Manager first</li>
-                                    <li><i class="fas fa-info text-primary me-1"></i> Then authorize to allow login</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-secondary mb-2">
-                            <div class="card-body text-center py-2">
-                                <span class="badge bg-secondary fs-6 mb-2"><i class="fas fa-ban me-1"></i> Unauthorized</span>
-                                <p class="small mb-1"><strong>CANNOT LOGIN</strong></p>
-                                <ul class="list-unstyled mb-0 small text-start">
-                                    <li><i class="fas fa-times text-danger me-1"></i> Blocked by authentication system</li>
-                                    <li><i class="fas fa-info text-primary me-1"></i> Must be authorized by HR first</li>
-                                </ul>
+                                <span class="badge bg-success fs-6 mb-2"><i class="fas fa-check-circle me-1"></i> Step 3: Can Login</span>
+                                <p class="small mb-0">Employee can now login with their credentials. HR/Manager login directly without approval.</p>
                             </div>
                         </div>
                     </div>
@@ -109,8 +83,8 @@
                         <th>Name</th>
                         <th>Department</th>
                         <th>Role</th>
-                        <th>Login Credentials</th>
-                        <th>Can Login?</th>
+                        <th>Login Status</th>
+                        <th>Approved By</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -130,21 +104,23 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if emp.role in 'hr,manager' %}
-                            <code>{{ emp.employee_id }}</code>
-                            <br>
-                            <small class="text-muted">Pass: employee123</small>
+                            {% if emp.is_authorized and emp.approved_by_manager %}
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Approved - Can Login</span>
+                            {% elif emp.is_authorized and not emp.approved_by_manager and emp.role in 'hr,manager' %}
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Active (HR/Manager)</span>
+                            {% elif emp.is_authorized and not emp.approved_by_manager %}
+                            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pending Manager Approval</span>
                             {% else %}
-                            <small class="text-muted">-</small>
+                            <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Not Authorized</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if emp.is_authorized and emp.role in 'hr,manager' %}
-                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Yes</span>
-                            {% elif emp.is_authorized and emp.role not in 'hr,manager' %}
-                            <span class="badge bg-warning text-dark"><i class="fas fa-exclamation me-1"></i>Wrong Role</span>
+                            {% if emp.approved_by %}
+                            <small>{{ emp.approved_by.username }}</small>
+                            {% elif emp.is_authorized and emp.role in 'hr,manager' %}
+                            <small class="text-muted">Direct (HR/Manager)</small>
                             {% else %}
-                            <span class="badge bg-danger"><i class="fas fa-times me-1"></i>No</span>
+                            <small class="text-muted">-</small>
                             {% endif %}
                         </td>
                         <td>
@@ -156,18 +132,14 @@
                                 </button>
                             </form>
                             {% else %}
-                            {% if emp.role in 'hr,manager' %}
                             <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#authModal{{ emp.pk }}" title="Grant Access">
                                 <i class="fas fa-check me-1"></i> Authorize
                             </button>
-                            {% else %}
-                            <span class="text-muted small">Change role to HR/Manager first</span>
-                            {% endif %}
                             {% endif %}
                         </td>
                     </tr>
 
-                    {% if not emp.is_authorized and emp.role in 'hr,manager' %}
+                    {% if not emp.is_authorized %}
                     <div class="modal fade" id="authModal{{ emp.pk }}" tabindex="-1">
                         <div class="modal-dialog">
                             <div class="modal-content">
@@ -178,10 +150,21 @@
                                 <form method="post" action="{% url 'toggle_authorize' emp.pk %}">
                                     {% csrf_token %}
                                     <div class="modal-body">
+                                        {% if emp.role in 'hr,manager' %}
                                         <div class="alert alert-success">
-                                            <strong>Login Credentials for {{ emp.full_name }}:</strong><br>
+                                            <strong>HR/Manager Direct Authorization</strong><br>
+                                            HR and Manager roles can login directly without manager approval.
+                                        </div>
+                                        {% else %}
+                                        <div class="alert alert-info">
+                                            <strong>Employee Authorization Request</strong><br>
+                                            After you authorize, a <strong>Manager must approve</strong> before this employee can login.
+                                        </div>
+                                        {% endif %}
+                                        <div class="alert alert-light">
+                                            <strong>Login Credentials:</strong><br>
                                             <strong>Username:</strong> <code>{{ emp.employee_id }}</code><br>
-                                            <strong>Password:</strong> Leave blank for default (<code>employee123</code>) or set a new one below.
+                                            <strong>Password:</strong> Leave blank for default (<code>employee123</code>) or set below.
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label fw-bold">Set Custom Password (optional)</label>
@@ -195,7 +178,7 @@
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                         <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-check me-1"></i> Authorize & Save
+                                            <i class="fas fa-check me-1"></i> Authorize
                                         </button>
                                     </div>
                                 </form>
