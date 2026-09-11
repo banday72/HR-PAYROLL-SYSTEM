@@ -261,12 +261,15 @@ def toggle_authorize(request, pk):
         employee.is_authorized = not employee.is_authorized
         employee.save()
         if employee.is_authorized:
-            if new_password and employee.user:
-                employee.user.set_password(new_password)
-                employee.user.save()
-                messages.success(request, f'{employee.full_name} authorized. Username: {employee.employee_id} | Password: {new_password}')
+            if employee.role not in ('hr', 'manager'):
+                messages.warning(request, f'{employee.full_name} is authorized but has role "{employee.role}". Only HR and Manager roles can login. Change their role to HR/Manager to allow login.')
             else:
-                messages.success(request, f'{employee.full_name} authorized. Username: {employee.employee_id} | Default password: employee123')
+                if new_password and employee.user:
+                    employee.user.set_password(new_password)
+                    employee.user.save()
+                    messages.success(request, f'{employee.full_name} authorized. Username: {employee.employee_id} | Password: {new_password}')
+                else:
+                    messages.success(request, f'{employee.full_name} authorized. Username: {employee.employee_id} | Default password: employee123')
         else:
             messages.warning(request, f'{employee.full_name} has been deauthorized. They can no longer login.')
     return redirect('authorized_users')
