@@ -8,6 +8,7 @@ urlpatterns = [
     path('employees/<int:pk>/', views.employee_detail, name='employee_detail'),
     path('employees/<int:pk>/edit/', views.employee_update, name='employee_update'),
     path('employees/<int:pk>/delete/', views.employee_delete, name='employee_delete'),
+    path('employees/import/', views.bulk_import_employees, name='bulk_import'),
     path('departments/', views.department_list, name='department_list'),
     path('departments/create/', views.department_create, name='department_create'),
     path('departments/<int:pk>/edit/', views.department_update, name='department_update'),
@@ -15,4 +16,5 @@ urlpatterns = [
     path('change-password/', views.change_password, name='change_password'),
     path('authorized-users/', views.authorized_users, name='authorized_users'),
     path('authorized-users/<int:pk>/toggle/', views.toggle_authorize, name='toggle_authorize'),
+    path('audit-log/', views.audit_log_list, name='audit_log'),
 ]

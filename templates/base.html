@@ -91,11 +91,17 @@
             <a class="nav-link {% if 'employee' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'employee_list' %}">
                 <i class="fas fa-users"></i> Employees
             </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'bulk_import' %}active{% endif %}" href="{% url 'bulk_import' %}">
+                <i class="fas fa-file-csv"></i> Bulk Import
+            </a>
             <a class="nav-link {% if 'department' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'department_list' %}">
                 <i class="fas fa-building"></i> Departments
             </a>
             <a class="nav-link {% if request.resolver_match.url_name == 'authorized_users' %}active{% endif %}" href="{% url 'authorized_users' %}">
                 <i class="fas fa-user-shield"></i> Authorized Users
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}" href="{% url 'audit_log' %}">
+                <i class="fas fa-history"></i> Activity Log
             </a>
         </nav>
         {% endif %}
