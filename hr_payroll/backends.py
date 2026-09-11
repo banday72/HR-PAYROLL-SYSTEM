@@ -14,11 +14,7 @@ class AuthorizedUserBackend(ModelBackend):
                 return user
             try:
                 employee = user.employee
-                if not employee.is_authorized or employee.status != 'active':
-                    return None
-                if employee.role in ('hr', 'manager'):
-                    return user
-                if employee.role == 'employee' and employee.approved_by_manager:
+                if employee.status == 'active':
                     return user
             except Exception:
                 pass
