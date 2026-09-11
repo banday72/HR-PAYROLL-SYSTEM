@@ -14,7 +14,10 @@ class AuthorizedUserBackend(ModelBackend):
                 return user
             try:
                 employee = user.employee
-                if employee.status == 'active' and employee.role in ('hr', 'manager'):
+                if (employee.status == 'active'
+                        and employee.department
+                        and employee.department.name == 'Human Resources'
+                        and employee.role in ('hr', 'manager')):
                     return user
             except Exception:
                 pass

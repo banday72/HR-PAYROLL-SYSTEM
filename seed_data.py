@@ -128,6 +128,9 @@ for emp_id, first, last, email, gender, dept_name, designation, salary in employ
             'is_authorized': True,
         }
     )
+        if emp_id == 'EMP002':
+            emp.role = 'hr'
+            emp.save()
     # Create user account for employee
     if not emp.user:
         user, user_created = User.objects.get_or_create(
