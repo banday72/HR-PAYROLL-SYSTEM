@@ -66,8 +66,8 @@
         </div>
         <div class="header-right">
             {% if user.is_authenticated %}
-            {% if is_hr %}<span class="badge bg-success me-1">{% if user.employee.role == 'manager' %}Manager{% else %}HR{% endif %}</span>{% else %}<span class="badge bg-secondary me-1">Employee</span>{% endif %}
-            <span class="user-badge"><i class="fas fa-user-circle me-1"></i> {{ user.username }}</span>
+            {% if user.is_superuser %}<span class="badge bg-danger me-1">Super Admin</span>{% elif is_hr %}<span class="badge bg-success me-1">{% if user.employee.role == 'manager' %}Manager{% else %}HR{% endif %}</span>{% else %}<span class="badge bg-secondary me-1">Employee</span>{% endif %}
+            <span class="user-badge"><i class="fas fa-user-circle me-1"></i> {% if user.is_superuser %}Senior HR Manager{% else %}{{ user.get_full_name|default:user.username }}{% endif %}</span>
             <a href="{% url 'change_password' %}" class="btn btn-sm" style="background:#2980b9;color:white;padding:0.35rem 0.9rem;border-radius:20px;font-size:0.82rem;text-decoration:none;font-weight:500;">
                 <i class="fas fa-key me-1"></i> Change Password
             </a>
