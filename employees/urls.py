@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import views_face
+from . import views_face_login
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -27,4 +28,6 @@ urlpatterns = [
     path('face-manage/', views_face.face_manage_list, name='face_manage'),
     path('face-manage/save/', views_face.face_save_for_employee, name='face_save_for_employee'),
     path('face-manage/remove/', views_face.face_remove_for_employee, name='face_remove_for_employee'),
+    path('face-login/', views_face_login.face_login_page, name='face_login'),
+    path('face-login/check/', views_face_login.face_login_check, name='face_login_check'),
 ]

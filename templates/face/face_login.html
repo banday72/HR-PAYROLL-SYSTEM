@@ -1,0 +1,247 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Login - HR Payroll System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <style>
+        body { background: linear-gradient(135deg, #1a5276, #2980b9); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; }
+        .login-card { max-width: 500px; width: 100%; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .login-header { background: linear-gradient(135deg, #1a5276, #2980b9); color: white; padding: 30px; text-align: center; }
+        .login-header h3 { margin: 0; font-weight: 700; }
+        .login-header p { margin: 5px 0 0; opacity: 0.8; font-size: 0.9rem; }
+        .mode-tabs { display: flex; gap: 10px; margin: 20px 0; }
+        .mode-tab { flex: 1; padding: 12px; border: 2px solid #dee2e6; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s; background: #f8f9fa; }
+        .mode-tab:hover { border-color: #2980b9; background: #e8f4f8; }
+        .mode-tab.active { border-color: #2980b9; background: #2980b9; color: white; }
+        .mode-tab i { font-size: 1.5rem; display: block; margin-bottom: 5px; }
+        #video { width: 100%; border-radius: 12px; border: 3px solid #2980b9; }
+        #preview { max-width: 100%; border-radius: 12px; display: none; border: 3px solid #28a745; }
+        #overlay { position: absolute; top: 0; left: 0; pointer-events: none; }
+        #overlayCanvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+        .video-wrapper { position: relative; display: inline-block; width: 100%; }
+        .preview-wrapper { position: relative; display: inline-block; width: 100%; }
+        .upload-area { border: 3px dashed #2980b9; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; background: #f8f9fa; transition: all 0.3s; }
+        .upload-area:hover { background: #e8f4f8; }
+        .status-box { padding: 12px; border-radius: 10px; margin-top: 15px; text-align: center; font-weight: 600; }
+        .status-box.success { background: #d4edda; color: #155724; }
+        .status-box.error { background: #f8d7da; color: #721c24; }
+        .status-box.info { background: #d1ecf1; color: #0c5460; }
+        .status-box.warning { background: #fff3cd; color: #856404; }
+        .hidden { display: none !important; }
+        .links { text-align: center; margin-top: 15px; }
+        .links a { color: #2980b9; text-decoration: none; font-size: 0.9rem; }
+        .links a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="login-card card">
+        <div class="login-header">
+            <h3><i class="fas fa-fingerprint me-2"></i>Face Login</h3>
+            <p>HR Payroll System - AI Powered</p>
+        </div>
+        <div class="card-body p-4">
+            <div class="mode-tabs">
+                <div class="mode-tab active" onclick="switchMode('webcam')" id="tabWebcam">
+                    <i class="fas fa-camera"></i> Webcam
+                </div>
+                <div class="mode-tab" onclick="switchMode('upload')" id="tabUpload">
+                    <i class="fas fa-cloud-upload-alt"></i> Photo Upload
+                </div>
+            </div>
+
+            <!-- WEBCAM MODE -->
+            <div id="webcamMode">
+                <div class="video-wrapper">
+                    <video id="video" autoplay muted></video>
+                    <canvas id="overlay"></canvas>
+                </div>
+                <div id="statusBox" class="status-box info">
+                    <i class="fas fa-info-circle"></i> Click "Start Camera" to begin
+                </div>
+                <button id="startBtn" class="btn btn-primary w-100 mt-3" onclick="startCamera()">
+                    <i class="fas fa-camera me-1"></i>Start Camera
+                </button>
+                <button id="loginWebcamBtn" class="btn btn-success w-100 mt-2" onclick="loginWebcam()" style="display:none;">
+                    <i class="fas fa-sign-in-alt me-1"></i>Login with Face
+                </button>
+            </div>
+
+            <!-- UPLOAD MODE -->
+            <div id="uploadMode" class="hidden">
+                <div class="upload-area" onclick="document.getElementById('photoInput').click();">
+                    <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhoto(event)">
+                    <div id="uploadPlaceholder">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                        <h5>Upload Your Face Photo</h5>
+                        <p class="text-muted">JPG, PNG</p>
+                    </div>
+                    <div class="preview-wrapper" id="previewWrapper" style="display:none;">
+                        <img id="preview" src="">
+                        <canvas id="overlayCanvas"></canvas>
+                    </div>
+                </div>
+                <div id="statusBoxUpload" class="status-box info">
+                    <i class="fas fa-info-circle"></i> Upload a photo of your face
+                </div>
+                <button id="loginUploadBtn" class="btn btn-success w-100 mt-2" onclick="loginUpload()" style="display:none;">
+                    <i class="fas fa-sign-in-alt me-1"></i>Login with Face
+                </button>
+            </div>
+
+            <div class="links">
+                <a href="{% url 'login' %}"><i class="fas fa-key me-1"></i>Login with Password</a>
+                <br>
+                <a href="{% url 'dashboard' %}"><i class="fas fa-home me-1"></i>Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+<script>
+let modelsLoaded = false;
+let currentDescriptors = null;
+let currentMode = 'webcam';
+let cameraStream = null;
+const video = document.getElementById('video');
+const overlay = document.getElementById('overlay');
+
+async function loadModels() {
+    if (modelsLoaded) return true;
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+    try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        modelsLoaded = true;
+        return true;
+    } catch (e) { console.error(e); return false; }
+}
+
+function setStatus(msg, type, target) {
+    const el = document.getElementById(target || (currentMode === 'webcam' ? 'statusBox' : 'statusBoxUpload'));
+    el.className = 'status-box ' + type;
+    const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+    el.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg;
+}
+
+function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('tabWebcam').classList.toggle('active', mode === 'webcam');
+    document.getElementById('tabUpload').classList.toggle('active', mode === 'upload');
+    document.getElementById('webcamMode').classList.toggle('hidden', mode !== 'webcam');
+    document.getElementById('uploadMode').classList.toggle('hidden', mode !== 'upload');
+    if (mode === 'upload' && cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+}
+
+// === WEBCAM ===
+async function startCamera() {
+    setStatus('Loading AI models...', 'info', 'statusBox');
+    const loaded = await loadModels();
+    if (!loaded) { setStatus('Error loading models.', 'error', 'statusBox'); return; }
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        video.srcObject = cameraStream;
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('loginWebcamBtn').style.display = 'block';
+        setStatus('Camera active. Position your face.', 'info', 'statusBox');
+        detectWebcam();
+    } catch (e) { setStatus('Cannot access camera.', 'error', 'statusBox'); }
+}
+
+async function detectWebcam() {
+    if (!modelsLoaded || currentMode !== 'webcam') return;
+    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+    const canvas = faceapi.createCanvasFromMedia(video);
+    overlay.width = canvas.width; overlay.height = canvas.height;
+    const ctx = overlay.getContext('2d'); ctx.clearRect(0, 0, overlay.width, overlay.height);
+    const displaySize = { width: video.videoWidth, height: video.videoHeight };
+    faceapi.matchDimensions(canvas, displaySize);
+    const resized = faceapi.resizeResults(detections, displaySize);
+    resized.forEach(d => { const box = d.detection.box; ctx.strokeStyle = '#28a745'; ctx.lineWidth = 3; ctx.strokeRect(box.x, box.y, box.width, box.height); });
+    if (detections.length === 1) { setStatus('Face detected! Click Login.', 'success', 'statusBox'); }
+    else if (detections.length === 0) { setStatus('No face detected.', 'warning', 'statusBox'); }
+    else { setStatus('Multiple faces.', 'warning', 'statusBox'); }
+    requestAnimationFrame(detectWebcam);
+}
+
+async function loginWebcam() {
+    if (!modelsLoaded) return;
+    setStatus('Processing...', 'info', 'statusBox');
+    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+    if (detections.length !== 1) { setStatus('Need exactly one face.', 'error', 'statusBox'); return; }
+    currentDescriptors = detections.map(d => Array.from(d.descriptor));
+    await sendLogin();
+}
+
+// === UPLOAD ===
+function handlePhoto(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        document.getElementById('preview').src = e.target.result;
+        document.getElementById('preview').style.display = 'block';
+        document.getElementById('previewWrapper').style.display = 'inline-block';
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+        setStatus('Loading AI models...', 'info', 'statusBoxUpload');
+        const loaded = await loadModels(); if (!loaded) return;
+        setStatus('Detecting face...', 'info', 'statusBoxUpload');
+        const img = new Image();
+        img.onload = async function() {
+            const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+            const canvas = document.getElementById('overlayCanvas');
+            canvas.width = img.width; canvas.height = img.height;
+            canvas.style.width = document.getElementById('preview').width + 'px';
+            canvas.style.height = document.getElementById('preview').height + 'px';
+            const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const displaySize = { width: img.width, height: img.height };
+            faceapi.matchDimensions(canvas, displaySize);
+            const resized = faceapi.resizeResults(detections, displaySize);
+            resized.forEach(d => { const box = d.detection.box; ctx.strokeStyle = '#28a745'; ctx.lineWidth = 3; ctx.strokeRect(box.x, box.y, box.width, box.height); });
+            if (detections.length === 0) { setStatus('No face found.', 'error', 'statusBoxUpload'); currentDescriptors = null; }
+            else if (detections.length > 1) { setStatus('Multiple faces.', 'error', 'statusBoxUpload'); currentDescriptors = null; }
+            else { currentDescriptors = detections.map(d => Array.from(d.descriptor)); setStatus('Face detected! Click Login.', 'success', 'statusBoxUpload'); document.getElementById('loginUploadBtn').style.display = 'block'; }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function loginUpload() {
+    if (!currentDescriptors) { setStatus('No face data.', 'error', 'statusBoxUpload'); return; }
+    sendLogin();
+}
+
+// === LOGIN ===
+async function sendLogin() {
+    setStatus('Verifying face...', 'info', currentMode === 'webcam' ? 'statusBox' : 'statusBoxUpload');
+    try {
+        const response = await fetch('/face-login/check/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ descriptors: currentDescriptors })
+        });
+        const result = await response.json();
+        const target = currentMode === 'webcam' ? 'statusBox' : 'statusBoxUpload';
+        if (result.status === 'ok') {
+            setStatus('Welcome! Redirecting...', 'success', target);
+            setTimeout(() => { window.location.href = result.redirect || '/'; }, 1500);
+        } else {
+            setStatus(result.message, 'error', target);
+        }
+    } catch (e) {
+        setStatus('Error logging in.', 'error', currentMode === 'webcam' ? 'statusBox' : 'statusBoxUpload');
+    }
+}
+
+function getCookie(name) {
+    let v = null;
+    if (document.cookie) document.cookie.split(';').forEach(c => { c = c.trim(); if (c.substring(0, name.length + 1) === name + '=') v = decodeURIComponent(c.substring(name.length + 1)); });
+    return v;
+}
+</script>
+</body>
+</html>
