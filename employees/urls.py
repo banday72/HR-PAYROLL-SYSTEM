@@ -24,4 +24,7 @@ urlpatterns = [
     path('face-register/save/', views_face.face_save, name='face_save'),
     path('face-verify/', views_face.face_verify_page, name='face_verify_page'),
     path('face-verify/check/', views_face.face_verify, name='face_verify'),
+    path('face-manage/', views_face.face_manage_list, name='face_manage'),
+    path('face-manage/save/', views_face.face_save_for_employee, name='face_save_for_employee'),
+    path('face-manage/remove/', views_face.face_remove_for_employee, name='face_remove_for_employee'),
 ]

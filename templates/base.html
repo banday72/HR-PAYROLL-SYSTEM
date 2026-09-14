@@ -99,6 +99,11 @@
             <a class="nav-link {% if request.resolver_match.url_name == 'face_verify_page' %}active{% endif %}" href="{% url 'face_verify_page' %}">
                 <i class="fas fa-fingerprint" style="color:#e74c3c;"></i> <span style="color:#e74c3c;">Face Verify</span>
             </a>
+            {% if is_hr %}
+            <a class="nav-link {% if request.resolver_match.url_name == 'face_manage' %}active{% endif %}" href="{% url 'face_manage' %}">
+                <i class="fas fa-users-cog" style="color:#e74c3c;"></i> <span style="color:#e74c3c;">Manage Faces</span>
+            </a>
+            {% endif %}
         </nav>
         {% if is_hr %}
         <div class="sidebar-heading">HR Management</div>

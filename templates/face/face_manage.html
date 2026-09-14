@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+{% block title %}Face Management{% endblock %}
+{% block page_title %}Face Lock Management{% endblock %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+.face-status { padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 600; }
+.face-status.registered { background: #d4edda; color: #155724; }
+.face-status.not-registered { background: #f8d7da; color: #721c24; }
+.upload-area { border: 2px dashed #2980b9; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; background: #f8f9fa; transition: all 0.3s; }
+.upload-area:hover { background: #e8f4f8; }
+#preview { max-width: 100%; border-radius: 8px; display: none; max-height: 200px; }
+.status-box { padding: 10px; border-radius: 8px; margin-top: 10px; text-align: center; font-weight: 600; font-size: 0.9rem; }
+.status-box.success { background: #d4edda; color: #155724; }
+.status-box.error { background: #f8d7da; color: #721c24; }
+.status-box.info { background: #d1ecf1; color: #0c5460; }
+.modal-backdrop { background: rgba(0,0,0,0.5); }
+.preview-wrapper { position: relative; display: inline-block; }
+#overlayCanvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+</style>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-shield-alt me-1"></i>Manage Employee Faces</h6>
+        <span class="badge bg-primary">{{ employees|length }} employees</span>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search ID or name..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.pk }}" {% if selected_dept == dept.pk|stringformat:"d" %}selected{% endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="face_status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="registered" {% if face_filter == 'registered' %}selected{% endif %}>Face Registered</option>
+                    <option value="not_registered" {% if face_filter == 'not_registered' %}selected{% endif %}>Not Registered</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter me-1"></i>Filter</button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr><th>Employee ID</th><th>Name</th><th>Department</th><th>Face Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for emp in employees %}
+                    <tr id="row-{{ emp.employee_id }}">
+                        <td>{{ emp.employee_id }}</td>
+                        <td>{{ emp.full_name }}</td>
+                        <td>{{ emp.department|default:"-" }}</td>
+                        <td>
+                            {% if emp.face_registered %}
+                            <span class="face-status registered"><i class="fas fa-check"></i> Registered</span>
+                            {% else %}
+                            <span class="face-status not-registered"><i class="fas fa-times"></i> Not Registered</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if emp.user %}
+                            <button class="btn btn-sm btn-primary" onclick="openModal('{{ emp.employee_id }}', '{{ emp.full_name }}')">
+                                <i class="fas fa-camera me-1"></i>{% if emp.face_registered %}Re-register{% else %}Register{% endif %}
+                            </button>
+                            {% if emp.face_registered %}
+                            <button class="btn btn-sm btn-danger" onclick="removeFace('{{ emp.employee_id }}', '{{ emp.full_name }}')">
+                                <i class="fas fa-trash me-1"></i>Remove
+                            </button>
+                            {% endif %}
+                            {% else %}
+                            <span class="text-muted small">No user account</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted">No employees found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div id="faceModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:white; border-radius:12px; padding:25px; width:500px; max-width:95vw; max-height:90vh; overflow-y:auto;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="fas fa-user-shield me-1"></i>Register Face for <span id="modalEmpName"></span></h5>
+            <button class="btn btn-sm btn-outline-secondary" onclick="closeModal()">&times;</button>
+        </div>
+
+        <div class="mode-tabs mb-3" style="display:flex; gap:8px;">
+            <div class="mode-tab active" onclick="modalSwitchMode('webcam')" id="modalTabWebcam" style="flex:1; padding:8px; border:2px solid #dee2e6; border-radius:8px; text-align:center; cursor:pointer;">
+                <i class="fas fa-camera"></i> Webcam
+            </div>
+            <div class="mode-tab" onclick="modalSwitchMode('upload')" id="modalTabUpload" style="flex:1; padding:8px; border:2px solid #dee2e6; border-radius:8px; text-align:center; cursor:pointer;">
+                <i class="fas fa-cloud-upload-alt"></i> Upload
+            </div>
+        </div>
+
+        <div id="modalWebcamMode">
+            <video id="modalVideo" autoplay muted style="width:100%; border-radius:8px; border:2px solid #2980b9;"></video>
+            <canvas id="modalOverlay" style="position:absolute; top:0; left:0; pointer-events:none;"></canvas>
+            <div id="modalStatusWebcam" class="status-box info">Click Start Camera</div>
+            <div class="d-grid gap-2 mt-2">
+                <button id="modalStartBtn" class="btn btn-primary btn-sm" onclick="modalStartCamera()">Start Camera</button>
+                <button id="modalCaptureBtn" class="btn btn-success btn-sm" onclick="modalCapture()" style="display:none;">Register Face</button>
+            </div>
+        </div>
+
+        <div id="modalUploadMode" style="display:none;">
+            <div class="upload-area" onclick="document.getElementById('modalPhotoInput').click();">
+                <input type="file" id="modalPhotoInput" accept="image/*" style="display:none;" onchange="modalHandlePhoto(event)">
+                <div id="modalUploadPlaceholder">
+                    <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
+                    <p>Click to upload face photo</p>
+                </div>
+                <div class="preview-wrapper" id="modalPreviewWrapper" style="display:none;">
+                    <img id="modalPreview" src="" style="max-width:100%; border-radius:8px;">
+                    <canvas id="modalOverlayCanvas"></canvas>
+                </div>
+            </div>
+            <div id="modalStatusUpload" class="status-box info mt-2">Upload face photo</div>
+            <div class="d-grid gap-2 mt-2">
+                <button id="modalUploadBtn" class="btn btn-success btn-sm" onclick="modalUploadRegister()" style="display:none;">Register Face</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let modalCurrentEmpId = null;
+let modalDescriptors = null;
+let modalCameraStream = null;
+let modalMode = 'webcam';
+let modalModelsLoaded = false;
+
+async function modalLoadModels() {
+    if (modalModelsLoaded) return true;
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+    try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        modalModelsLoaded = true;
+        return true;
+    } catch (e) { console.error(e); return false; }
+}
+
+function openModal(empId, empName) {
+    modalCurrentEmpId = empId;
+    modalDescriptors = null;
+    document.getElementById('modalEmpName').textContent = empName;
+    document.getElementById('faceModal').style.display = 'block';
+    document.getElementById('modalStatusWebcam').textContent = 'Click Start Camera';
+    document.getElementById('modalStatusWebcam').className = 'status-box info';
+}
+
+function closeModal() {
+    document.getElementById('faceModal').style.display = 'none';
+    if (modalCameraStream) { modalCameraStream.getTracks().forEach(t => t.stop()); modalCameraStream = null; }
+}
+
+function modalSwitchMode(mode) {
+    modalMode = mode;
+    document.getElementById('modalTabWebcam').style.borderColor = mode === 'webcam' ? '#2980b9' : '#dee2e6';
+    document.getElementById('modalTabUpload').style.borderColor = mode === 'upload' ? '#2980b9' : '#dee2e6';
+    document.getElementById('modalWebcamMode').style.display = mode === 'webcam' ? 'block' : 'none';
+    document.getElementById('modalUploadMode').style.display = mode === 'upload' ? 'block' : 'none';
+    if (mode === 'upload' && modalCameraStream) { modalCameraStream.getTracks().forEach(t => t.stop()); modalCameraStream = null; }
+}
+
+function modalSetStatus(msg, type, target) {
+    const el = document.getElementById(target || (modalMode === 'webcam' ? 'modalStatusWebcam' : 'modalStatusUpload'));
+    el.className = 'status-box ' + type;
+    el.textContent = msg;
+}
+
+async function modalStartCamera() {
+    modalSetStatus('Loading models...', 'info', 'modalStatusWebcam');
+    const loaded = await modalLoadModels();
+    if (!loaded) { modalSetStatus('Error loading models', 'error', 'modalStatusWebcam'); return; }
+    try {
+        modalCameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+        document.getElementById('modalVideo').srcObject = modalCameraStream;
+        document.getElementById('modalStartBtn').style.display = 'none';
+        document.getElementById('modalCaptureBtn').style.display = 'block';
+        modalSetStatus('Camera active. Position face.', 'info', 'modalStatusWebcam');
+        modalDetectWebcam();
+    } catch (e) { modalSetStatus('Cannot access camera', 'error', 'modalStatusWebcam'); }
+}
+
+async function modalDetectWebcam() {
+    if (!modalModelsLoaded || modalMode !== 'webcam') return;
+    const video = document.getElementById('modalVideo');
+    const overlay = document.getElementById('modalOverlay');
+    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+    const canvas = faceapi.createCanvasFromMedia(video);
+    overlay.width = canvas.width; overlay.height = canvas.height;
+    const ctx = overlay.getContext('2d'); ctx.clearRect(0, 0, overlay.width, overlay.height);
+    const displaySize = { width: video.videoWidth, height: video.videoHeight };
+    faceapi.matchDimensions(canvas, displaySize);
+    const resized = faceapi.resizeResults(detections, displaySize);
+    resized.forEach(d => { const box = d.detection.box; ctx.strokeStyle = '#28a745'; ctx.lineWidth = 3; ctx.strokeRect(box.x, box.y, box.width, box.height); });
+    if (detections.length === 1) { modalSetStatus('Face detected!', 'success', 'modalStatusWebcam'); }
+    else if (detections.length === 0) { modalSetStatus('No face', 'warning', 'modalStatusWebcam'); }
+    else { modalSetStatus('Multiple faces', 'warning', 'modalStatusWebcam'); }
+    requestAnimationFrame(modalDetectWebcam);
+}
+
+async function modalCapture() {
+    if (!modalModelsLoaded) return;
+    modalSetStatus('Processing...', 'info', 'modalStatusWebcam');
+    const video = document.getElementById('modalVideo');
+    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+    if (detections.length !== 1) { modalSetStatus('Need exactly one face', 'error', 'modalStatusWebcam'); return; }
+    modalDescriptors = detections.map(d => Array.from(d.descriptor));
+    await modalSave();
+}
+
+function modalHandlePhoto(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        document.getElementById('modalPreview').src = e.target.result;
+        document.getElementById('modalPreview').style.display = 'block';
+        document.getElementById('modalPreviewWrapper').style.display = 'inline-block';
+        document.getElementById('modalUploadPlaceholder').style.display = 'none';
+        modalSetStatus('Loading models...', 'info', 'modalStatusUpload');
+        const loaded = await modalLoadModels(); if (!loaded) return;
+        modalSetStatus('Detecting face...', 'info', 'modalStatusUpload');
+        const img = new Image();
+        img.onload = async function() {
+            const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+            if (detections.length === 0) { modalSetStatus('No face found', 'error', 'modalStatusUpload'); modalDescriptors = null; }
+            else if (detections.length > 1) { modalSetStatus('Multiple faces', 'error', 'modalStatusUpload'); modalDescriptors = null; }
+            else { modalDescriptors = detections.map(d => Array.from(d.descriptor)); modalSetStatus('Face detected!', 'success', 'modalStatusUpload'); document.getElementById('modalUploadBtn').style.display = 'block'; }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function modalUploadRegister() {
+    if (!modalDescriptors) { modalSetStatus('No face data', 'error', 'modalStatusUpload'); return; }
+    modalSave();
+}
+
+async function modalSave() {
+    modalSetStatus('Saving...', 'info', modalMode === 'webcam' ? 'modalStatusWebcam' : 'modalStatusUpload');
+    try {
+        const response = await fetch('/face-manage/save/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ employee_id: modalCurrentEmpId, descriptors: modalDescriptors })
+        });
+        const result = await response.json();
+        const target = modalMode === 'webcam' ? 'modalStatusWebcam' : 'modalStatusUpload';
+        if (result.status === 'ok') {
+            modalSetStatus('Face registered!', 'success', target);
+            setTimeout(() => { closeModal(); location.reload(); }, 1000);
+        } else {
+            modalSetStatus('Error: ' + result.message, 'error', target);
+        }
+    } catch (e) { modalSetStatus('Error saving', 'error', modalMode === 'webcam' ? 'modalStatusWebcam' : 'modalStatusUpload'); }
+}
+
+async function removeFace(empId, empName) {
+    if (!confirm('Remove face data for ' + empName + '?')) return;
+    try {
+        const response = await fetch('/face-manage/remove/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ employee_id: empId })
+        });
+        const result = await response.json();
+        if (result.status === 'ok') { location.reload(); }
+        else { alert('Error: ' + result.message); }
+    } catch (e) { alert('Error removing face'); }
+}
+
+function getCookie(name) {
+    let v = null;
+    if (document.cookie) document.cookie.split(';').forEach(c => { c = c.trim(); if (c.substring(0, name.length + 1) === name + '=') v = decodeURIComponent(c.substring(name.length + 1)); });
+    return v;
+}
+</script>
+{% endblock %}
