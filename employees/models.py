@@ -41,6 +41,8 @@ class Employee(models.Model):
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_employees')
     approved_at = models.DateTimeField(null=True, blank=True)
     must_change_password = models.BooleanField(default=False, help_text='Force password change on next login')
+    face_data = models.TextField(blank=True, help_text='JSON encoded face descriptors for face lock')
+    face_registered = models.BooleanField(default=False, help_text='Whether face is registered for face lock')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

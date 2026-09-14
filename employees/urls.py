@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import views_face
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -19,4 +20,8 @@ urlpatterns = [
     path('pending-approvals/', views.pending_approvals, name='pending_approvals'),
     path('pending-approvals/<int:pk>/action/', views.manager_approve, name='manager_approve'),
     path('audit-log/', views.audit_log_list, name='audit_log'),
+    path('face-register/', views_face.face_register, name='face_register'),
+    path('face-register/save/', views_face.face_save, name='face_save'),
+    path('face-verify/', views_face.face_verify_page, name='face_verify_page'),
+    path('face-verify/check/', views_face.face_verify, name='face_verify'),
 ]

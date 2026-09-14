@@ -91,6 +91,15 @@
                 <i class="fas fa-search" style="color:#9b59b6;"></i> <span style="color:#9b59b6;">NL Reports</span>
             </a>
         </nav>
+        <div class="sidebar-heading" style="color:#e74c3c;"><i class="fas fa-shield-alt me-1"></i>Security</div>
+        <nav class="nav flex-column">
+            <a class="nav-link {% if request.resolver_match.url_name == 'face_register' %}active{% endif %}" href="{% url 'face_register' %}">
+                <i class="fas fa-user-shield" style="color:#e74c3c;"></i> <span style="color:#e74c3c;">Face Register</span>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'face_verify_page' %}active{% endif %}" href="{% url 'face_verify_page' %}">
+                <i class="fas fa-fingerprint" style="color:#e74c3c;"></i> <span style="color:#e74c3c;">Face Verify</span>
+            </a>
+        </nav>
         {% if is_hr %}
         <div class="sidebar-heading">HR Management</div>
         <nav class="nav flex-column">
