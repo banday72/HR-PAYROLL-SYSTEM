@@ -5,15 +5,18 @@
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <style>
 .face-container { max-width: 600px; margin: 0 auto; }
-#video { width: 100%; border-radius: 12px; border: 3px solid #2980b9; }
-#overlay { position: absolute; top: 0; left: 0; }
-.video-wrapper { position: relative; display: inline-block; width: 100%; }
+.upload-area { border: 3px dashed #2980b9; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; background: #f8f9fa; }
+.upload-area:hover { background: #e8f4f8; border-color: #3498db; }
+.upload-area.has-image { border-color: #28a745; background: #d4edda; padding: 10px; }
+#preview { max-width: 100%; border-radius: 8px; display: none; }
+#overlayCanvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+.preview-wrapper { position: relative; display: inline-block; }
 .status-box { padding: 15px; border-radius: 10px; margin-top: 15px; text-align: center; font-weight: 600; }
-.status-box.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-.status-box.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-.status-box.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-.status-box.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-.face-status { font-size: 0.9rem; color: #666; margin-top: 5px; }
+.status-box.success { background: #d4edda; color: #155724; }
+.status-box.error { background: #f8d7da; color: #721c24; }
+.status-box.info { background: #d1ecf1; color: #0c5460; }
+.status-box.warning { background: #fff3cd; color: #856404; }
+.face-status { font-size: 0.9rem; margin-top: 5px; }
 .face-status.registered { color: #28a745; font-weight: 600; }
 .face-status.not-registered { color: #dc3545; }
 </style>
@@ -21,6 +24,10 @@
     {% if is_superuser %}
     <div class="alert alert-warning">
         <i class="fas fa-info-circle me-1"></i> Superuser accounts cannot register faces. Only employees with linked profiles can use Face Lock.
+    </div>
+    {% elif not employee %}
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle me-1"></i> No employee profile linked to your account. Contact HR.
     </div>
     {% else %}
     <div class="card shadow mb-4">
@@ -30,7 +37,6 @@
             </h6>
         </div>
         <div class="card-body">
-            {% if employee %}
             <div class="mb-3">
                 <strong>Employee:</strong> {{ employee.employee_id }} - {{ employee.full_name }}<br>
                 <span class="face-status {% if employee.face_registered %}registered{% else %}not-registered{% endif %}">
@@ -42,44 +48,41 @@
                 </span>
             </div>
 
-            <div class="text-center mb-3">
-                <div class="video-wrapper">
-                    <video id="video" autoplay muted></video>
-                    <canvas id="overlay" style="position:absolute;top:0;left:0;"></canvas>
+            <div id="uploadArea" class="upload-area" onclick="document.getElementById('photoInput').click();">
+                <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhoto(event)">
+                <div id="uploadPlaceholder">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                    <h5>Click to Upload Your Face Photo</h5>
+                    <p class="text-muted">JPG, PNG - Face clearly visible</p>
+                </div>
+                <div class="preview-wrapper" id="previewWrapper" style="display:none;">
+                    <img id="preview" src="">
+                    <canvas id="overlayCanvas"></canvas>
                 </div>
             </div>
 
             <div id="statusBox" class="status-box info">
-                <i class="fas fa-info-circle"></i> Click "Start Camera" to begin face registration
+                <i class="fas fa-info-circle"></i> Upload a clear photo of your face
             </div>
 
             <div class="d-grid gap-2 mt-3">
-                <button id="startBtn" class="btn btn-primary" onclick="startCamera()">
-                    <i class="fas fa-camera me-1"></i>Start Camera
-                </button>
-                <button id="captureBtn" class="btn btn-success" onclick="captureFace()" style="display:none;">
+                <button id="registerBtn" class="btn btn-success" onclick="registerFace()" style="display:none;">
                     <i class="fas fa-fingerprint me-1"></i>Register My Face
                 </button>
-                <button id="retakeBtn" class="btn btn-warning" onclick="retake()" style="display:none;">
-                    <i class="fas fa-redo me-1"></i>Retake
+                <button id="changeBtn" class="btn btn-outline-secondary" onclick="changePhoto()" style="display:none;">
+                    <i class="fas fa-redo me-1"></i>Change Photo
                 </button>
             </div>
 
             <div class="mt-3">
                 <h6><i class="fas fa-info-circle text-info me-1"></i>Instructions:</h6>
                 <ol class="small text-muted">
-                    <li>Click "Start Camera" to activate your webcam</li>
-                    <li>Position your face in the center of the frame</li>
-                    <li>Ensure good lighting on your face</li>
-                    <li>Click "Register My Face" to save your face data</li>
-                    <li>You'll need face verification on each login</li>
+                    <li>Click the upload area to select your photo</li>
+                    <li>Photo should have ONE face, clearly visible</li>
+                    <li>Good lighting, face looking at camera</li>
+                    <li>Click "Register My Face" to save</li>
                 </ol>
             </div>
-            {% else %}
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-triangle me-1"></i> No employee profile linked to your account. Contact HR.
-            </div>
-            {% endif %}
         </div>
     </div>
     {% endif %}
@@ -87,115 +90,138 @@
 
 {% if not is_superuser and employee %}
 <script>
-const video = document.getElementById('video');
-const overlay = document.getElementById('overlay');
+const uploadArea = document.getElementById('uploadArea');
+const photoInput = document.getElementById('photoInput');
+const preview = document.getElementById('preview');
+const previewWrapper = document.getElementById('previewWrapper');
+const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+const overlayCanvas = document.getElementById('overlayCanvas');
 const statusBox = document.getElementById('statusBox');
-const startBtn = document.getElementById('startBtn');
-const captureBtn = document.getElementById('captureBtn');
-const retakeBtn = document.getElementById('retakeBtn');
+const registerBtn = document.getElementById('registerBtn');
+const changeBtn = document.getElementById('changeBtn');
 let modelsLoaded = false;
+let currentDescriptors = null;
 
 async function loadModels() {
+    if (modelsLoaded) return true;
     const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
     try {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
         modelsLoaded = true;
-        setStatus('Models loaded successfully', 'success');
+        return true;
     } catch (e) {
-        setStatus('Error loading face detection models. Please refresh.', 'error');
-        console.error(e);
+        console.error('Model load error:', e);
+        setStatus('Error loading AI models. Please refresh.', 'error');
+        return false;
     }
 }
 
 function setStatus(msg, type) {
     statusBox.className = 'status-box ' + type;
-    statusBox.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle') + '"></i> ' + msg;
+    const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+    statusBox.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + msg;
 }
 
-async function startCamera() {
-    setStatus('Loading face detection models...', 'info');
-    await loadModels();
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
-        video.srcObject = stream;
-        startBtn.style.display = 'none';
-        captureBtn.style.display = 'block';
-        setStatus('Camera active. Position your face and click Register.', 'info');
-        detectFaces();
-    } catch (e) {
-        setStatus('Cannot access camera. Please allow camera permission.', 'error');
-    }
+function handlePhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        previewWrapper.style.display = 'inline-block';
+        uploadPlaceholder.style.display = 'none';
+        uploadArea.classList.add('has-image');
+        changeBtn.style.display = 'inline-block';
+
+        setStatus('Loading AI models...', 'info');
+        const loaded = await loadModels();
+        if (!loaded) return;
+
+        setStatus('Detecting face in your photo...', 'info');
+
+        const img = new Image();
+        img.onload = async function() {
+            const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions())
+                .withFaceLandmarks().withFaceDescriptors();
+
+            overlayCanvas.width = img.width;
+            overlayCanvas.height = img.height;
+            overlayCanvas.style.width = preview.width + 'px';
+            overlayCanvas.style.height = preview.height + 'px';
+            const ctx = overlayCanvas.getContext('2d');
+            ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+            const displaySize = { width: img.width, height: img.height };
+            faceapi.matchDimensions(overlayCanvas, displaySize);
+            const resized = faceapi.resizeResults(detections, displaySize);
+
+            resized.forEach(d => {
+                const box = d.detection.box;
+                ctx.strokeStyle = '#28a745';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(box.x, box.y, box.width, box.height);
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#28a745';
+                ctx.fillText('Face Detected', box.x, box.y - 10);
+            });
+
+            if (detections.length === 0) {
+                setStatus('No face found in this photo. Please upload a clearer photo.', 'error');
+                registerBtn.style.display = 'none';
+                currentDescriptors = null;
+            } else if (detections.length > 1) {
+                setStatus('Multiple faces found. Please upload a photo with only YOUR face.', 'error');
+                registerBtn.style.display = 'none';
+                currentDescriptors = null;
+            } else {
+                currentDescriptors = detections.map(d => Array.from(d.descriptor));
+                setStatus('Face detected! Click "Register My Face" to save.', 'success');
+                registerBtn.style.display = 'block';
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
-async function detectFaces() {
-    if (!modelsLoaded) return;
-    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks().withFaceDescriptors();
-    const canvas = faceapi.createCanvasFromMedia(video);
-    overlay.width = canvas.width;
-    overlay.height = canvas.height;
-    overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
-    const displaySize = { width: video.videoWidth, height: video.videoHeight };
-    faceapi.matchDimensions(canvas, displaySize);
-    const resized = faceapi.resizeResults(detections, displaySize);
-    resized.forEach(d => {
-        const box = d.detection.box;
-        overlay.getContext('2d').strokeStyle = '#2980b9';
-        overlay.getContext('2d').lineWidth = 3;
-        overlay.getContext('2d').strokeRect(box.x, box.y, box.width, box.height);
-        overlay.getContext('2d').font = '16px Arial';
-        overlay.getContext('2d').fillStyle = '#2980b9';
-        overlay.getContext('2d').fillText('Face Detected', box.x, box.y - 10);
-    });
-    if (detections.length === 0) {
-        setStatus('No face detected. Please position your face.', 'warning');
-    } else if (detections.length > 1) {
-        setStatus('Multiple faces detected. Only one face allowed.', 'warning');
-    } else {
-        setStatus('Face detected! Click "Register My Face" to save.', 'success');
-    }
-    requestAnimationFrame(detectFaces);
+function changePhoto() {
+    photoInput.value = '';
+    preview.style.display = 'none';
+    previewWrapper.style.display = 'none';
+    uploadPlaceholder.style.display = 'block';
+    uploadArea.classList.remove('has-image');
+    registerBtn.style.display = 'none';
+    changeBtn.style.display = 'none';
+    currentDescriptors = null;
+    setStatus('Upload a clear photo of your face', 'info');
 }
 
-async function captureFace() {
-    if (!modelsLoaded) return;
-    setStatus('Processing face...', 'info');
-    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks().withFaceDescriptors();
-    if (detections.length === 0) {
-        setStatus('No face detected. Please try again.', 'error');
+async function registerFace() {
+    if (!currentDescriptors) {
+        setStatus('No face data to save.', 'error');
         return;
     }
-    if (detections.length > 1) {
-        setStatus('Multiple faces detected. Only one face allowed.', 'error');
-        return;
-    }
-    const descriptors = detections.map(d => Array.from(d.descriptor));
+    setStatus('Saving face data...', 'info');
     try {
         const response = await fetch('/face-register/save/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-            body: JSON.stringify({ descriptors: descriptors })
+            body: JSON.stringify({ descriptors: currentDescriptors })
         });
         const result = await response.json();
         if (result.status === 'ok') {
             setStatus('Face registered successfully! You can now use face lock on login.', 'success');
-            captureBtn.style.display = 'none';
-            retakeBtn.style.display = 'block';
+            registerBtn.style.display = 'none';
         } else {
             setStatus('Error: ' + result.message, 'error');
         }
     } catch (e) {
         setStatus('Error saving face data. Please try again.', 'error');
     }
-}
-
-function retake() {
-    captureBtn.style.display = 'block';
-    retakeBtn.style.display = 'none';
-    setStatus('Camera active. Position your face and click Register.', 'info');
 }
 
 function getCookie(name) {

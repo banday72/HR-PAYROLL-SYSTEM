@@ -50,11 +50,11 @@ def face_verify(request):
             employee = Employee.objects.get(user=request.user)
 
             if not employee.face_registered or not employee.face_data:
-                return JsonResponse({'status': 'error', 'message': 'No face registered'})
+                return JsonResponse({'status': 'ok', 'message': 'No face registered - skipping verification'})
 
             stored = json.loads(employee.face_data)
             if not stored:
-                return JsonResponse({'status': 'error', 'message': 'No face data stored'})
+                return JsonResponse({'status': 'ok', 'message': 'No face data stored - skipping verification'})
 
             for stored_desc in stored:
                 for input_desc in face_descriptors:
@@ -65,7 +65,7 @@ def face_verify(request):
 
             return JsonResponse({'status': 'error', 'message': 'Face does not match'})
         except Employee.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'No employee profile'}, status=404)
+            return JsonResponse({'status': 'ok', 'message': 'No employee profile - skipping verification'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
