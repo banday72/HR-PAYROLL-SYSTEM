@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}AI Payroll Anomaly Detection{% endblock %}
+{% block page_title %}AI Payroll Anomaly Detection{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card shadow h-100 py-2 border-left-primary">
+            <div class="card-body">
+                <div class="text-primary fw-bold">Total Payrolls</div>
+                <div class="h4 mb-0">{{ summary.total_payrolls }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card shadow h-100 py-2 border-left-success">
+            <div class="card-body">
+                <div class="text-success fw-bold">Total Amount</div>
+                <div class="h5 mb-0">Rs. {{ summary.total_amount|floatformat:0 }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card shadow h-100 py-2 border-left-info">
+            <div class="card-body">
+                <div class="text-info fw-bold">Average Salary</div>
+                <div class="h5 mb-0">Rs. {{ summary.avg_salary|floatformat:0 }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card shadow h-100 py-2 border-left-danger">
+            <div class="card-body">
+                <div class="text-danger fw-bold">Anomalies Detected</div>
+                <div class="h4 mb-0">{{ summary.anomaly_count }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if anomalies %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-danger"><i class="fas fa-bug me-1"></i>Detected Anomalies</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr><th>Employee</th><th>Type</th><th>Severity</th><th>Description</th><th>Actual</th><th>Expected</th></tr>
+                </thead>
+                <tbody>
+                    {% for a in anomalies %}
+                    <tr>
+                        <td>{{ a.employee.employee_id }} - {{ a.employee.full_name }}</td>
+                        <td><span class="badge bg-secondary">{{ a.type }}</span></td>
+                        <td><span class="badge bg-{% if a.severity == 'critical' %}danger{% elif a.severity == 'high' %}warning{% else %}info{% endif %}">{{ a.severity|upper }}</span></td>
+                        <td>{{ a.description }}</td>
+                        <td>Rs. {{ a.actual|floatformat:0 }}</td>
+                        <td>Rs. {{ a.expected|floatformat:0 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card shadow mb-4">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+        <h5 class="text-success">No Anomalies Detected</h5>
+        <p class="text-muted">All payroll calculations look normal.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

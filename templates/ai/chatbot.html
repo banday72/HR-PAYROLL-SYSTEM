@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}AI Assistant{% endblock %}
+{% block page_title %}AI Chat Assistant{% endblock %}
+{% block content %}
+<style>
+.chat-container { max-width: 700px; margin: 0 auto; }
+.chat-box { background: #f8f9fa; border-radius: 12px; padding: 20px; min-height: 300px; max-height: 500px; overflow-y: auto; border: 1px solid #dee2e6; }
+.chat-msg { margin-bottom: 12px; padding: 12px 16px; border-radius: 12px; max-width: 85%; white-space: pre-line; font-size: 0.95rem; }
+.chat-msg.user { background: #2980b9; color: white; margin-left: auto; text-align: right; }
+.chat-msg.ai { background: white; border: 1px solid #dee2e6; }
+.chat-msg.ai strong { color: #2980b9; }
+.quick-qs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.quick-q { padding: 6px 14px; background: #e8f4f8; border: 1px solid #bee5eb; border-radius: 20px; cursor: pointer; font-size: 0.85rem; color: #0c5460; transition: all 0.2s; }
+.quick-q:hover { background: #2980b9; color: white; border-color: #2980b9; }
+</style>
+<div class="chat-container">
+    <div class="card shadow">
+        <div class="card-header py-3" style="background: linear-gradient(135deg, #2980b9, #3498db); color: white;">
+            <h6 class="m-0"><i class="fas fa-robot me-2"></i>AI HR Assistant</h6>
+        </div>
+        <div class="card-body">
+            <div class="chat-box" id="chatBox">
+                <div class="chat-msg ai">
+                    <strong>AI Assistant:</strong><br>
+                    Hello! I'm your HR AI Assistant. Ask me anything about employees, salary, attendance, leaves, or departments.
+                </div>
+                {% if response %}
+                <div class="chat-msg user">
+                    <strong>You:</strong><br>
+                    {{ user_query|default:"Your question" }}
+                </div>
+                <div class="chat-msg ai">
+                    <strong>AI Assistant:</strong><br>
+                    {{ response }}
+                </div>
+                {% endif %}
+            </div>
+            <form method="post" class="mt-3">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" name="message" class="form-control" placeholder="Ask me anything..." autofocus required>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send</button>
+                </div>
+            </form>
+            <div class="quick-qs">
+                <span class="quick-q" onclick="ask('How many employees?')">How many employees?</span>
+                <span class="quick-q" onclick="ask('Show salary for September')">Salary report</span>
+                <span class="quick-q" onclick="ask('Attendance report')">Attendance</span>
+                <span class="quick-q" onclick="ask('Leave summary')">Leave summary</span>
+                <span class="quick-q" onclick="ask('Department headcount')">Departments</span>
+                <span class="quick-q" onclick="ask('Who is late today?')">Late today</span>
+                <span class="quick-q" onclick="ask('Budget loans')">Loans</span>
+                {% if not user.is_superuser %}
+                <span class="quick-q" onclick="ask('My salary')">My salary</span>
+                <span class="quick-q" onclick="ask('My attendance')">My attendance</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function ask(q) {
+    document.querySelector('input[name="message"]').value = q;
+    document.querySelector('form').submit();
+}
+document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+</script>
+{% endblock %}

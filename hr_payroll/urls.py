@@ -44,6 +44,7 @@ urlpatterns = [
     path('attendance/', include('attendance.urls')),
     path('leaves/', include('leaves.urls')),
     path('payroll/', include('payroll.urls')),
+    path('ai/', include('ai_engine.urls')),
 ]
 
 if settings.DEBUG:

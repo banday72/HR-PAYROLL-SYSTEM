@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}AI Employee Risk Prediction{% endblock %}
+{% block page_title %}AI Employee Risk Prediction{% endblock %}
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-info"><i class="fas fa-brain me-1"></i>AI Risk Analysis</h6>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">AI analyzes attendance patterns, leave usage, salary, and tenure to predict which employees may be at risk of leaving or underperforming.</p>
+    </div>
+</div>
+
+{% if risks %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Risk Assessment Results</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr><th>Employee</th><th>Department</th><th>Risk Score</th><th>Risk Level</th><th>Days Employed</th><th>Approved Leaves</th><th>AI Reasoning</th></tr>
+                </thead>
+                <tbody>
+                    {% for r in risks %}
+                    <tr>
+                        <td>{{ r.employee.employee_id }} - {{ r.employee.full_name }}</td>
+                        <td>{{ r.employee.department|default:"-" }}</td>
+                        <td>
+                            <div class="progress" style="width: 100px;">
+                                <div class="progress-bar bg-{% if r.risk_level == 'high' %}danger{% elif r.risk_level == 'medium' %}warning{% else %}success{% endif %}" style="width: {{ r.score }}%"></div>
+                            </div>
+                            <small>{{ r.score }}/100</small>
+                        </td>
+                        <td><span class="badge bg-{% if r.risk_level == 'high' %}danger{% elif r.risk_level == 'medium' %}warning{% else %}success{% endif %}">{{ r.risk_level|upper }}</span></td>
+                        <td>{{ r.days_employed }} days</td>
+                        <td>{{ r.approved_leaves }}</td>
+                        <td>
+                            <ul class="mb-0 ps-3">
+                            {% for reason in r.reasons %}
+                                <li>{{ reason }}</li>
+                            {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card shadow mb-4">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+        <h5 class="text-success">All Employees Low Risk</h5>
+        <p class="text-muted">No high-risk employees detected based on current data.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
