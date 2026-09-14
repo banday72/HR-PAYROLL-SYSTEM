@@ -13,7 +13,9 @@ def face_register(request):
         employee = Employee.objects.get(user=request.user)
     except Employee.DoesNotExist:
         pass
-    return render(request, 'face/face_register.html', {'employee': employee})
+    if request.user.is_superuser and not employee:
+        return render(request, 'face/face_register.html', {'employee': None, 'is_superuser': True})
+    return render(request, 'face/face_register.html', {'employee': employee, 'is_superuser': False})
 
 
 @csrf_exempt
@@ -28,7 +30,7 @@ def face_save(request):
             employee.save()
             return JsonResponse({'status': 'ok', 'message': 'Face registered successfully'})
         except Employee.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Employee not found'}, status=404)
+            return JsonResponse({'status': 'error', 'message': 'No employee profile linked to your account'}, status=404)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)
@@ -63,7 +65,7 @@ def face_verify(request):
 
             return JsonResponse({'status': 'error', 'message': 'Face does not match'})
         except Employee.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Employee not found'}, status=404)
+            return JsonResponse({'status': 'error', 'message': 'No employee profile'}, status=404)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error', 'message': 'POST required'}, status=400)

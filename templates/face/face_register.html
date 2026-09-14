@@ -18,6 +18,11 @@
 .face-status.not-registered { color: #dc3545; }
 </style>
 <div class="face-container">
+    {% if is_superuser %}
+    <div class="alert alert-warning">
+        <i class="fas fa-info-circle me-1"></i> Superuser accounts cannot register faces. Only employees with linked profiles can use Face Lock.
+    </div>
+    {% else %}
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">
@@ -28,7 +33,7 @@
             {% if employee %}
             <div class="mb-3">
                 <strong>Employee:</strong> {{ employee.employee_id }} - {{ employee.full_name }}<br>
-                <span class="face-status {% if employee.face_registered %}registered{% else %}not-registered %}">
+                <span class="face-status {% if employee.face_registered %}registered{% else %}not-registered{% endif %}">
                     {% if employee.face_registered %}
                     <i class="fas fa-check-circle"></i> Face Already Registered
                     {% else %}
@@ -36,7 +41,6 @@
                     {% endif %}
                 </span>
             </div>
-            {% endif %}
 
             <div class="text-center mb-3">
                 <div class="video-wrapper">
@@ -71,10 +75,17 @@
                     <li>You'll need face verification on each login</li>
                 </ol>
             </div>
+            {% else %}
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-1"></i> No employee profile linked to your account. Contact HR.
+            </div>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
 </div>
 
+{% if not is_superuser and employee %}
 <script>
 const video = document.getElementById('video');
 const overlay = document.getElementById('overlay');
@@ -93,17 +104,8 @@ async function loadModels() {
         modelsLoaded = true;
         setStatus('Models loaded successfully', 'success');
     } catch (e) {
-        try {
-            const altUrl = '/static/models/';
-            await faceapi.nets.tinyFaceDetector.loadFromUri(altUrl);
-            await faceapi.nets.faceLandmark68Net.loadFromUri(altUrl);
-            await faceapi.nets.faceRecognitionNet.loadFromUri(altUrl);
-            modelsLoaded = true;
-            setStatus('Models loaded successfully', 'success');
-        } catch (e2) {
-            setStatus('Error loading face detection models. Please refresh.', 'error');
-            console.error(e2);
-        }
+        setStatus('Error loading face detection models. Please refresh.', 'error');
+        console.error(e);
     }
 }
 
@@ -211,4 +213,5 @@ function getCookie(name) {
     return cookieValue;
 }
 </script>
+{% endif %}
 {% endblock %}
