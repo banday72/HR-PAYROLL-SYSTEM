@@ -84,6 +84,12 @@
             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'ai_chatbot' %}active{% endif %}" href="{% url 'ai_chatbot' %}">
+                <i class="fas fa-robot" style="color:#9b59b6;"></i> <span style="color:#9b59b6;font-weight:600;">AI Assistant</span>
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'ai_report' %}active{% endif %}" href="{% url 'ai_report' %}">
+                <i class="fas fa-search" style="color:#9b59b6;"></i> <span style="color:#9b59b6;">NL Reports</span>
+            </a>
         </nav>
         {% if is_hr %}
         <div class="sidebar-heading">HR Management</div>
@@ -105,6 +111,18 @@
             </a>
             <a class="nav-link {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}" href="{% url 'audit_log' %}">
                 <i class="fas fa-history"></i> Activity Log
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'ai_attendance' %}active{% endif %}" href="{% url 'ai_attendance' %}">
+                <i class="fas fa-chart-line" style="color:#9b59b6;"></i> Attendance AI
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'ai_anomalies' %}active{% endif %}" href="{% url 'ai_anomalies' %}">
+                <i class="fas fa-bug" style="color:#9b59b6;"></i> Payroll Anomaly
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'ai_risk' %}active{% endif %}" href="{% url 'ai_risk' %}">
+                <i class="fas fa-exclamation-triangle" style="color:#9b59b6;"></i> Risk Predictor
+            </a>
+            <a class="nav-link {% if request.resolver_match.url_name == 'ai_salary_rec' %}active{% endif %}" href="{% url 'ai_salary_rec' %}">
+                <i class="fas fa-lightbulb" style="color:#9b59b6;"></i> Salary Recs
             </a>
         </nav>
         {% endif %}
@@ -157,29 +175,6 @@
             </a>
         </nav>
         {% endif %}
-        <div class="sidebar-heading" style="color:#9b59b6;"><i class="fas fa-robot me-1"></i>AI Assistant</div>
-        <nav class="nav flex-column">
-            <a class="nav-link {% if request.resolver_match.url_name == 'ai_chatbot' %}active{% endif %}" href="{% url 'ai_chatbot' %}">
-                <i class="fas fa-robot" style="color:#9b59b6;"></i> Chat Assistant
-            </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'ai_report' %}active{% endif %}" href="{% url 'ai_report' %}">
-                <i class="fas fa-search" style="color:#9b59b6;"></i> NL Reports
-            </a>
-            {% if is_hr %}
-            <a class="nav-link {% if request.resolver_match.url_name == 'ai_attendance' %}active{% endif %}" href="{% url 'ai_attendance' %}">
-                <i class="fas fa-chart-line" style="color:#9b59b6;"></i> Attendance AI
-            </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'ai_anomalies' %}active{% endif %}" href="{% url 'ai_anomalies' %}">
-                <i class="fas fa-bug" style="color:#9b59b6;"></i> Payroll Anomaly
-            </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'ai_risk' %}active{% endif %}" href="{% url 'ai_risk' %}">
-                <i class="fas fa-exclamation-triangle" style="color:#9b59b6;"></i> Risk Predictor
-            </a>
-            <a class="nav-link {% if request.resolver_match.url_name == 'ai_salary_rec' %}active{% endif %}" href="{% url 'ai_salary_rec' %}">
-                <i class="fas fa-lightbulb" style="color:#9b59b6;"></i> Salary Recs
-            </a>
-            {% endif %}
-        </nav>
     </div>
 
     <div class="content-wrapper">
