@@ -267,4 +267,73 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Security Tips Popup -->
+<div class="modal fade" id="securityTipsModal" tabindex="-1" aria-labelledby="securityTipsModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-left: 5px solid #e74a3b;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1a5276, #2980b9); color: white;">
+                <h5 class="modal-title" id="securityTipsModalLabel">
+                    <i class="fas fa-shield-alt me-2"></i>Security Reminder
+                </h5>
+            </div>
+            <div class="modal-body py-4">
+                <div class="d-flex align-items-start mb-3">
+                    <div class="me-3" style="font-size: 1.5rem; color: #e74a3b;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold" style="color: #1a5276;">Stay Safe Online!</h6>
+                        <p class="text-muted mb-0">Please keep these security tips in mind:</p>
+                    </div>
+                </div>
+                <ul class="list-unstyled mt-3">
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="fas fa-link me-3 mt-1" style="color: #e74a3b; font-size: 1.1rem;"></i>
+                        <span>Do not click on <strong>untrusted links</strong> received via email or messages.</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="fas fa-lock me-3 mt-1" style="color: #e74a3b; font-size: 1.1rem;"></i>
+                        <span>Always use a <strong>strong password</strong> with mix of letters, numbers & symbols.</span>
+                    </li>
+                    <li class="d-flex align-items-start">
+                        <i class="fas fa-sign-out-alt me-3 mt-1" style="color: #e74a3b; font-size: 1.1rem;"></i>
+                        <span>Always <strong>log out</strong> when you are free or leaving your workstation.</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal" id="closeSecurityPopup">
+                    <i class="fas fa-check me-1"></i> Got it, I'll stay safe!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var STORAGE_KEY = 'security_popup_first_shown';
+    var EXPIRY_DAYS = 2;
+    var EXPIRY_MS = EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+
+    var modal = new bootstrap.Modal(document.getElementById('securityTipsModal'));
+    var firstShown = localStorage.getItem(STORAGE_KEY);
+
+    if (!firstShown) {
+        modal.show();
+        localStorage.setItem(STORAGE_KEY, Date.now().toString());
+    } else {
+        var elapsed = Date.now() - parseInt(firstShown, 10);
+        if (elapsed < EXPIRY_MS) {
+            modal.show();
+        }
+    }
+
+    document.getElementById('closeSecurityPopup').addEventListener('click', function() {
+        localStorage.setItem(STORAGE_KEY, Date.now().toString());
+    });
+})();
+</script>
+
 {% endblock %}
