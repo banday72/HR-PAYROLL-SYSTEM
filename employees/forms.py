@@ -15,11 +15,10 @@ class DepartmentForm(forms.ModelForm):
 class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
-        fields = ['employee_id', 'first_name', 'last_name', 'email', 'phone',
+        fields = ['first_name', 'last_name', 'email', 'phone',
                   'date_of_birth', 'gender', 'address', 'city', 'department', 'designation',
                   'date_of_joining', 'salary', 'role', 'status', 'profile_picture']
         widgets = {
-            'employee_id': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),

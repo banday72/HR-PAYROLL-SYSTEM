@@ -15,6 +15,18 @@ from .decorators import hr_required
 from .audit import log_audit
 
 
+def generate_employee_id():
+    last_emp = Employee.objects.order_by('-id').first()
+    if last_emp and last_emp.employee_id.startswith('EMP'):
+        try:
+            last_num = int(last_emp.employee_id.replace('EMP', ''))
+            return f'EMP{last_num + 1:03d}'
+        except ValueError:
+            pass
+    count = Employee.objects.count()
+    return f'EMP{count + 1:03d}'
+
+
 def get_employee(user):
     try:
         return Employee.objects.get(user=user)
@@ -130,7 +142,9 @@ def employee_create(request):
     if request.method == 'POST':
         form = EmployeeForm(request.POST, request.FILES)
         if form.is_valid():
-            emp = form.save()
+            emp = form.save(commit=False)
+            emp.employee_id = generate_employee_id()
+            emp.save()
             user = User.objects.create_user(
                 username=emp.employee_id,
                 email=emp.email,
@@ -412,11 +426,13 @@ def bulk_import_employees(request):
                     salary = row.get('salary', '0').strip()
                     role = row.get('role', 'employee').strip().lower()
 
-                    if not emp_id or not first_name or not last_name or not email:
+                    if not first_name or not last_name or not email:
                         skipped_count += 1
                         continue
 
-                    if Employee.objects.filter(employee_id=emp_id).exists():
+                    if not emp_id:
+                        emp_id = generate_employee_id()
+                    elif Employee.objects.filter(employee_id=emp_id).exists():
                         skipped_count += 1
                         continue
 
