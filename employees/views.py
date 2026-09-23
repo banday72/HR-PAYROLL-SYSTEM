@@ -523,9 +523,12 @@ def audit_log_list(request):
 
 @login_required
 def profile_update(request):
+    if not request.user.is_superuser:
+        messages.error(request, 'Only administrators can access profile settings.')
+        return redirect('dashboard')
     user = request.user
     employee = get_employee(user)
-    if not employee and user.is_superuser:
+    if not employee:
         try:
             employee, _ = Employee.objects.get_or_create(
                 user=user,
