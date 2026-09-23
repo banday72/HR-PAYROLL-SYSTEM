@@ -541,7 +541,7 @@ def profile_update(request):
                     'salary': 0,
                     'role': 'manager',
                     'status': 'active',
-                    'designation': 'CEO',
+                    'designation': 'Manager',
                 }
             )
         except Exception:
