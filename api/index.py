@@ -30,7 +30,7 @@ try:
             employee_id='CEO001', first_name='Ahmed', last_name='Banday',
             email='ahmed.banday@company.com', date_of_joining=date.today(),
             salary=500000, status='active', role='manager',
-            designation='Manager', is_authorized=True, approved_by_manager=True)
+            designation='CEO', is_authorized=True, approved_by_manager=True)
         ceo_emp.user = ceo_user
         ceo_emp.save()
 

@@ -78,7 +78,7 @@
                 {% endif %}
                 <div class="text-start">
                     <div style="font-size: 0.8rem; font-weight: 700; color: #1a5276; line-height: 1.1;">Ahmed Banday</div>
-                    <div style="font-size: 0.65rem; color: #e74a3b; font-weight: 600;">Manager</div>
+                    <div style="font-size: 0.65rem; color: #e74a3b; font-weight: 600;">CEO</div>
                 </div>
             </div>
             {% if user.is_superuser %}<span class="badge bg-danger me-1">Super Admin</span>{% elif is_hr %}<span class="badge bg-success me-1">{% if current_employee and current_employee.role == 'manager' %}Manager{% else %}HR{% endif %}</span>{% else %}<span class="badge bg-secondary me-1">Employee</span>{% endif %}
