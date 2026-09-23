@@ -1,29 +1,14 @@
-class SuperadminProfile:
-    def __init__(self, user):
-        self.user = user
-        self.profile_picture = None
-        self.profile_picture_b64 = ''
-        self.designation = 'Administrator'
-        self.role = 'superadmin'
-
-    @property
-    def is_hr(self):
-        return True
-
-    @property
-    def is_manager(self):
-        return True
-
-
 def role_context(request):
     context = {'is_hr': False, 'current_employee': None, 'ceo_employee': None}
     if request.user.is_authenticated:
         from employees.models import Employee
+
         try:
             ceo = Employee.objects.get(employee_id='CEO001')
             context['ceo_employee'] = ceo
         except Employee.DoesNotExist:
             pass
+
         try:
             emp = Employee.objects.get(user=request.user)
             context['current_employee'] = emp
@@ -31,5 +16,4 @@ def role_context(request):
         except Employee.DoesNotExist:
             if request.user.is_superuser:
                 context['is_hr'] = True
-                context['current_employee'] = SuperadminProfile(request.user)
     return context

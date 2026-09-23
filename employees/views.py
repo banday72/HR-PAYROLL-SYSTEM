@@ -528,24 +528,6 @@ def profile_update(request):
         return redirect('dashboard')
     user = request.user
     employee = get_employee(user)
-    if not employee:
-        try:
-            employee, _ = Employee.objects.get_or_create(
-                user=user,
-                defaults={
-                    'employee_id': 'CEO001',
-                    'first_name': user.first_name or 'Ahmed',
-                    'last_name': user.last_name or 'Banday',
-                    'email': user.email or f'admin{user.id}@admin.local',
-                    'date_of_joining': date.today(),
-                    'salary': 0,
-                    'role': 'manager',
-                    'status': 'active',
-                    'designation': 'Manager',
-                }
-            )
-        except Exception:
-            employee = None
     if request.method == 'POST':
         form = ProfileForm(request.POST, instance=user)
         if form.is_valid():

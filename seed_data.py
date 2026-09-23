@@ -22,6 +22,39 @@ if not User.objects.filter(username='admin').exists():
     User.objects.create_superuser('admin', 'admin@hrpayroll.com', 'admin123')
     print("Created superuser: admin / admin123")
 
+# Create CEO
+if not Employee.objects.filter(employee_id='CEO001').exists():
+    ceo_user, ceo_created = User.objects.get_or_create(
+        username='CEO001',
+        defaults={
+            'email': 'ahmed.banday@company.com',
+            'first_name': 'Ahmed',
+            'last_name': 'Banday',
+            'is_staff': False,
+        }
+    )
+    if ceo_created:
+        ceo_user.set_password('ceo123')
+        ceo_user.save()
+    ceo_emp = Employee.objects.create(
+        employee_id='CEO001',
+        first_name='Ahmed',
+        last_name='Banday',
+        email='ahmed.banday@company.com',
+        phone='0300-0000000',
+        department=None,
+        designation='Manager',
+        date_of_joining=date(2020, 1, 1),
+        salary=500000,
+        status='active',
+        role='manager',
+        is_authorized=True,
+        approved_by_manager=True,
+    )
+    ceo_emp.user = ceo_user
+    ceo_emp.save()
+    print("Created CEO: CEO001 / ceo123")
+
 # Create HR Manager
 if not Employee.objects.filter(employee_id='HM001').exists():
     hr_dept, _ = Department.objects.get_or_create(name='Human Resources', defaults={'description': 'HR Department'})
