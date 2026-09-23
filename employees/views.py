@@ -533,15 +533,15 @@ def profile_update(request):
             employee, _ = Employee.objects.get_or_create(
                 user=user,
                 defaults={
-                    'employee_id': f'ADMIN{user.id}',
-                    'first_name': user.first_name or user.username,
-                    'last_name': user.last_name or '',
+                    'employee_id': 'CEO001',
+                    'first_name': user.first_name or 'Ahmed',
+                    'last_name': user.last_name or 'Banday',
                     'email': user.email or f'admin{user.id}@admin.local',
                     'date_of_joining': date.today(),
                     'salary': 0,
                     'role': 'manager',
                     'status': 'active',
-                    'designation': 'Administrator',
+                    'designation': 'CEO',
                 }
             )
         except Exception:
