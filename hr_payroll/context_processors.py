@@ -4,8 +4,6 @@ class SuperadminProfile:
         self.profile_picture = None
         self.designation = 'Administrator'
         self.role = 'superadmin'
-        self.is_hr = True
-        self.is_manager = True
 
     @property
     def is_hr(self):
