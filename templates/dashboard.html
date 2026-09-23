@@ -106,6 +106,54 @@
 </div>
 
 <div class="row">
+    {% if current_manager %}
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user-tie me-1"></i> My Manager</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center p-3" style="background: #f0f7ff; border-radius: 10px; border-left: 4px solid #2980b9;">
+                    {% if current_manager.profile_picture_b64 %}
+                    <img src="{{ current_manager.profile_picture_b64 }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #2980b9; margin-right: 15px;">
+                    {% else %}
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #2980b9, #5dade2); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1rem; border: 2px solid #2980b9; margin-right: 15px; flex-shrink: 0;">{{ current_manager.first_name|first|upper }}{{ current_manager.last_name|first|upper }}</div>
+                    {% endif %}
+                    <div>
+                        <div style="font-size: 1rem; font-weight: 700; color: #1a5276;">{{ current_manager.first_name }} {{ current_manager.last_name }}</div>
+                        <div style="font-size: 0.8rem; color: #2980b9; font-weight: 600;">{{ current_manager.designation }}</div>
+                        <div style="font-size: 0.75rem; color: #7f8c8d;">{{ current_manager.department }}</div>
+                        <div style="font-size: 0.7rem; color: #7f8c8d;"><i class="fas fa-envelope me-1"></i>{{ current_manager.email }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="{% if current_manager %}col-lg-6{% else %}col-lg-12{% endif %}">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-crown me-1" style="color:#e74a3b;"></i> Company CEO</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center p-3" style="background: #fef5f4; border-radius: 10px; border-left: 4px solid #e74a3b;">
+                    {% if ceo_employee.profile_picture_b64 %}
+                    <img src="{{ ceo_employee.profile_picture_b64 }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #e74a3b; margin-right: 15px;">
+                    {% else %}
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #1a5276, #e74a3b); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1rem; border: 2px solid #e74a3b; margin-right: 15px; flex-shrink: 0;">AB</div>
+                    {% endif %}
+                    <div>
+                        <div style="font-size: 1rem; font-weight: 700; color: #1a5276;">Ahmed Banday</div>
+                        <div style="font-size: 0.8rem; color: #e74a3b; font-weight: 600;">CEO</div>
+                        <div style="font-size: 0.7rem; color: #7f8c8d;"><i class="fas fa-envelope me-1"></i>ahmed.banday@company.com</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
     <div class="col-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">

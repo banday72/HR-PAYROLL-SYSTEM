@@ -23,30 +23,75 @@ try:
     if not User.objects.filter(username='admin').exists():
         User.objects.create_superuser('admin', 'admin@hrpayroll.com', 'admin123')
 
-    if not User.objects.filter(username='CEO001').exists():
-        ceo_user = User.objects.create_user('CEO001', 'ahmed.banday@company.com', 'ceo123',
-            first_name='Ahmed', last_name='Banday')
-        ceo_emp = Employee.objects.create(
-            employee_id='CEO001', first_name='Ahmed', last_name='Banday',
-            email='ahmed.banday@company.com', date_of_joining=date.today(),
-            salary=500000, status='active', role='manager',
-            designation='CEO', is_authorized=True, approved_by_manager=True)
-        ceo_emp.user = ceo_user
-        ceo_emp.save()
+    depts = {}
+    for name, desc in [
+        ('Human Resources', 'HR Department'),
+        ('Engineering', 'Software development'),
+        ('Finance', 'Financial planning'),
+        ('Marketing', 'Brand and advertising'),
+        ('Operations', 'Day-to-day operations'),
+        ('Sales', 'Revenue generation'),
+    ]:
+        d, _ = Department.objects.get_or_create(name=name, defaults={'description': desc})
+        depts[name] = d
 
-    if not User.objects.filter(username='HM001').exists():
-        hr_dept, _ = Department.objects.get_or_create(name='Human Resources',
-            defaults={'description': 'HR Department'})
-        hm_user = User.objects.create_user('HM001', 'hr.manager@company.com', 'hm123',
-            first_name='HR', last_name='Manager')
-        hm_emp = Employee.objects.create(
-            employee_id='HM001', first_name='HR', last_name='Manager',
-            email='hr.manager@company.com', department=hr_dept,
-            designation='HR Manager', date_of_joining=date(2022, 1, 1),
-            salary=150000, status='active', role='manager',
-            is_authorized=True, approved_by_manager=True)
-        hm_emp.user = hm_user
-        hm_emp.save()
+    def get_or_create_emp(emp_id, first, last, email, dept_name, designation, salary, role='employee', reports_to=None, password='employee123'):
+        if Employee.objects.filter(employee_id=emp_id).exists():
+            return Employee.objects.get(employee_id=emp_id)
+        user, _ = User.objects.get_or_create(username=emp_id,
+            defaults={'email': email, 'first_name': first, 'last_name': last})
+        user.set_password(password)
+        user.save()
+        emp = Employee.objects.create(
+            employee_id=emp_id, first_name=first, last_name=last,
+            email=email, department=depts.get(dept_name),
+            designation=designation, date_of_joining=date(2021, 1, 1),
+            salary=salary, status='active', role=role,
+            is_authorized=True, approved_by_manager=True,
+            reports_to=reports_to)
+        emp.user = user
+        emp.save()
+        return emp
+
+    # CEO
+    ceo = get_or_create_emp('CEO001', 'Ahmed', 'Banday', 'ahmed.banday@company.com',
+        'Operations', 'CEO', 500000, role='manager', password='ceo123')
+
+    # HR Manager (reports to CEO)
+    hm = get_or_create_emp('HM001', 'Fatima', 'Khan', 'hr.manager@company.com',
+        'Human Resources', 'HR Manager', 150000, role='manager', reports_to=ceo, password='hm123')
+
+    # Department Managers (report to CEO)
+    mgr1 = get_or_create_emp('MGR001', 'Usman', 'Tariq', 'usman.tariq@company.com',
+        'Finance', 'Finance Manager', 180000, role='manager', reports_to=ceo, password='manager123')
+    mgr2 = get_or_create_emp('MGR002', 'Zainab', 'Ahmed', 'zainab.ahmed@company.com',
+        'Engineering', 'Engineering Manager', 190000, role='manager', reports_to=ceo, password='manager123')
+    mgr3 = get_or_create_emp('MGR003', 'Ayesha', 'Noor', 'ayesha.noor@company.com',
+        'Operations', 'Operations Manager', 170000, role='manager', reports_to=ceo, password='manager123')
+    mgr4 = get_or_create_emp('MGR004', 'Bilal', 'Sheikh', 'bilal.sheikh@company.com',
+        'Sales', 'Sales Manager', 160000, role='manager', reports_to=ceo, password='manager123')
+
+    # Employees (report to their managers)
+    get_or_create_emp('EMP001', 'Ahmed', 'Khan', 'ahmed.khan@company.com',
+        'Engineering', 'Senior Developer', 85000, reports_to=mgr2)
+    get_or_create_emp('EMP002', 'Sara', 'Malik', 'sara.malik@company.com',
+        'Human Resources', 'HR Executive', 70000, role='hr', reports_to=hm)
+    get_or_create_emp('EMP003', 'Omar', 'Raza', 'omar.raza@company.com',
+        'Finance', 'Financial Analyst', 75000, reports_to=mgr1)
+    get_or_create_emp('EMP004', 'Hassan', 'Iqbal', 'hassan.iqbal@company.com',
+        'Marketing', 'Marketing Lead', 72000, reports_to=mgr3)
+    get_or_create_emp('EMP005', 'Fatima', 'Ali', 'fatima.ali@company.com',
+        'Engineering', 'Full Stack Developer', 80000, reports_to=mgr2)
+    get_or_create_emp('EMP006', 'Hamza', 'Tariq', 'hamza.tariq@company.com',
+        'Operations', 'Operations Executive', 65000, reports_to=mgr3)
+    get_or_create_emp('EMP007', 'Kamran', 'Shah', 'kamran.shah@company.com',
+        'Sales', 'Sales Executive', 60000, reports_to=mgr4)
+    get_or_create_emp('EMP008', 'Ali', 'Raza', 'ali.raza@company.com',
+        'Engineering', 'DevOps Engineer', 82000, reports_to=mgr2)
+    get_or_create_emp('EMP009', 'Bilal', 'Ahmed', 'bilal.ahmed@company.com',
+        'Finance', 'Accountant', 62000, reports_to=mgr1)
+    get_or_create_emp('EMP010', 'Hira', 'Shah', 'hira.shah@company.com',
+        'Human Resources', 'HR Admin', 58000, reports_to=hm)
 except Exception:
     pass
 
