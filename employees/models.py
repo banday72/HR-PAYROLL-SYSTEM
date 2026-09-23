@@ -35,6 +35,7 @@ class Employee(models.Model):
     city = models.CharField(max_length=100, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
+    profile_picture_b64 = models.TextField(blank=True, help_text='Base64 encoded profile picture for Vercel')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='employee')
     is_authorized = models.BooleanField(default=False, help_text='Only authorized users can login')
     approved_by_manager = models.BooleanField(default=False, help_text='Manager must approve authorization')

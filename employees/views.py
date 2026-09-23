@@ -1,5 +1,6 @@
 import csv
 import io
+import base64
 from datetime import date
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -545,11 +546,14 @@ def profile_update(request):
             form.save()
             if employee:
                 if 'profile_picture' in request.FILES:
-                    employee.profile_picture = request.FILES['profile_picture']
-                    employee.save()
+                    f = request.FILES['profile_picture']
+                    ext = f.name.rsplit('.', 1)[-1].lower()
+                    mime = 'image/png' if ext == 'png' else 'image/jpeg'
+                    b64 = base64.b64encode(f.read()).decode('utf-8')
+                    employee.profile_picture_b64 = f'data:{mime};base64,{b64}'
                 if request.POST.get('designation'):
                     employee.designation = request.POST['designation']
-                    employee.save()
+                employee.save()
             messages.success(request, 'Profile updated successfully.')
             return redirect('profile_update')
     else:

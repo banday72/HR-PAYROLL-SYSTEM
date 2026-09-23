@@ -11,7 +11,9 @@
             </div>
             <div class="card-body text-center">
                 <div class="mb-3">
-                    {% if employee.profile_picture %}
+                    {% if employee.profile_picture_b64 %}
+                    <img src="{{ employee.profile_picture_b64 }}" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1a5276;">
+                    {% elif employee.profile_picture %}
                     <img src="{{ employee.profile_picture.url }}" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1a5276;">
                     {% else %}
                     <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #1a5276, #2980b9); display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 2rem; border: 3px solid #1a5276;">

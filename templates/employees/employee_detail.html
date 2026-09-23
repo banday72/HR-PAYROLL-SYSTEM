@@ -7,7 +7,9 @@
     <div class="col-lg-4">
         <div class="card shadow mb-4">
             <div class="card-body text-center">
-                {% if employee.profile_picture %}
+                {% if employee.profile_picture_b64 %}
+                <img src="{{ employee.profile_picture_b64 }}" alt="{{ employee.full_name }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                {% elif employee.profile_picture %}
                 <img src="{{ employee.profile_picture.url }}" alt="{{ employee.full_name }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
                 {% else %}
                 <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px; font-size: 2.5rem;">

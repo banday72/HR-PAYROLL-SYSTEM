@@ -72,7 +72,9 @@
                     <div style="font-size: 0.85rem; font-weight: 600; color: #1a5276; line-height: 1.2;">{{ user.get_full_name|default:user.username }}</div>
                     <div style="font-size: 0.7rem; color: #7f8c8d;">{% if current_employee %}{{ current_employee.designation|default:current_employee.role|title }}{% else %}Administrator{% endif %}</div>
                 </div>
-                {% if current_employee.profile_picture %}
+                {% if current_employee.profile_picture_b64 %}
+                <img src="{{ current_employee.profile_picture_b64 }}" alt="Profile" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #1a5276;">
+                {% elif current_employee.profile_picture %}
                 <img src="{{ current_employee.profile_picture.url }}" alt="Profile" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #1a5276;">
                 {% else %}
                 <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #1a5276, #2980b9); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; border: 2px solid #1a5276;">
