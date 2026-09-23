@@ -13,6 +13,12 @@ class DepartmentForm(forms.ModelForm):
 
 
 class EmployeeForm(forms.ModelForm):
+    employee_id_preview = forms.CharField(
+        label='Employee ID',
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True, 'placeholder': 'Auto-generated'}),
+    )
+
     class Meta:
         model = Employee
         fields = ['first_name', 'last_name', 'email', 'phone',

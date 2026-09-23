@@ -161,6 +161,7 @@ def employee_create(request):
             return redirect('employee_list')
     else:
         form = EmployeeForm()
+        form.fields['employee_id_preview'].initial = generate_employee_id()
     return render(request, 'employees/employee_form.html', {'form': form, 'title': 'Add Employee'})
 
 
