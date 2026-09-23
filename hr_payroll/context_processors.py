@@ -13,9 +13,6 @@ def role_context(request):
             emp = Employee.objects.get(user=request.user)
             context['current_employee'] = emp
             context['is_hr'] = emp.is_hr or emp.employee_id == 'CEO001'
-            if emp.employee_id == 'CEO001':
-                context['is_ceo_readonly'] = True
-                context['is_hr'] = True
         except Employee.DoesNotExist:
             if request.user.is_superuser:
                 context['is_hr'] = True
