@@ -30,4 +30,5 @@ urlpatterns = [
     path('face-manage/remove/', views_face.face_remove_for_employee, name='face_remove_for_employee'),
     path('face-login/', views_face_login.face_login_page, name='face_login'),
     path('face-login/check/', views_face_login.face_login_check, name='face_login_check'),
+    path('profile/', views.profile_update, name='profile_update'),
 ]

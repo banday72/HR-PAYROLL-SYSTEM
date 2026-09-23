@@ -69,17 +69,20 @@
             {% if user.is_superuser %}<span class="badge bg-danger me-1">Super Admin</span>{% elif is_hr %}<span class="badge bg-success me-1">{% if user.employee.role == 'manager' %}Manager{% else %}HR{% endif %}</span>{% else %}<span class="badge bg-secondary me-1">Employee</span>{% endif %}
             <div class="d-flex align-items-center" style="gap: 10px;">
                 <div class="text-end">
-                    <div style="font-size: 0.85rem; font-weight: 600; color: #1a5276; line-height: 1.2;">{% if user.is_superuser %}Super Admin{% else %}{{ user.get_full_name|default:user.username }}{% endif %}</div>
-                    <div style="font-size: 0.7rem; color: #7f8c8d;">{% if current_employee %}{{ current_employee.designation|default:current_employee.role|title }}{% elif user.is_superuser %}Administrator{% endif %}</div>
+                    <div style="font-size: 0.85rem; font-weight: 600; color: #1a5276; line-height: 1.2;">{{ user.get_full_name|default:user.username }}</div>
+                    <div style="font-size: 0.7rem; color: #7f8c8d;">{% if current_employee %}{{ current_employee.designation|default:current_employee.role|title }}{% else %}Administrator{% endif %}</div>
                 </div>
                 {% if current_employee.profile_picture %}
                 <img src="{{ current_employee.profile_picture.url }}" alt="Profile" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #1a5276;">
                 {% else %}
                 <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #1a5276, #2980b9); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; border: 2px solid #1a5276;">
-                    {% if user.is_superuser %}SA{% else %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% endif %}
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
                 </div>
                 {% endif %}
             </div>
+            <a href="{% url 'profile_update' %}" class="btn btn-sm" style="background:#27ae60;color:white;padding:0.35rem 0.9rem;border-radius:20px;font-size:0.82rem;text-decoration:none;font-weight:500;">
+                <i class="fas fa-user-edit me-1"></i> Profile
+            </a>
             <a href="{% url 'change_password' %}" class="btn btn-sm" style="background:#2980b9;color:white;padding:0.35rem 0.9rem;border-radius:20px;font-size:0.82rem;text-decoration:none;font-weight:500;">
                 <i class="fas fa-key me-1"></i> Change Password
             </a>

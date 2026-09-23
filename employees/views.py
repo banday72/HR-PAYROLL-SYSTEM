@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import Department, Employee, AuditLog
-from .forms import DepartmentForm, EmployeeForm
+from .forms import DepartmentForm, EmployeeForm, ProfileForm
 from .decorators import hr_required
 from .audit import log_audit
 
@@ -517,4 +517,44 @@ def audit_log_list(request):
         'page_obj': page_obj,
         'search': search,
         'action_filter': action_filter,
+    })
+
+
+@login_required
+def profile_update(request):
+    user = request.user
+    employee = get_employee(user)
+    if not employee and user.is_superuser:
+        employee, _ = Employee.objects.get_or_create(
+            user=user,
+            defaults={
+                'employee_id': f'ADMIN{user.id}',
+                'first_name': user.first_name or user.username,
+                'last_name': user.last_name or '',
+                'email': user.email or '',
+                'date_of_joining': date.today(),
+                'salary': 0,
+                'role': 'manager',
+                'status': 'active',
+                'designation': 'Administrator',
+            }
+        )
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            if employee:
+                if 'profile_picture' in request.FILES:
+                    employee.profile_picture = request.FILES['profile_picture']
+                    employee.save()
+                if request.POST.get('designation'):
+                    employee.designation = request.POST['designation']
+                    employee.save()
+            messages.success(request, 'Profile updated successfully.')
+            return redirect('profile_update')
+    else:
+        form = ProfileForm(instance=user)
+    return render(request, 'employees/profile_update.html', {
+        'form': form,
+        'employee': employee,
     })
