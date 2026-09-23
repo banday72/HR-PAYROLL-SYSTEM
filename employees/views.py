@@ -141,7 +141,7 @@ def employee_detail(request, pk):
 @hr_required
 def employee_create(request):
     if request.method == 'POST':
-        form = EmployeeForm(request.POST, request.FILES)
+        form = EmployeeForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             emp = form.save(commit=False)
             emp.employee_id = generate_employee_id()
@@ -161,7 +161,7 @@ def employee_create(request):
             messages.success(request, f'Employee created. Login: {emp.employee_id} / employee123. Go to Authorized Users to grant login access.')
             return redirect('employee_list')
     else:
-        form = EmployeeForm()
+        form = EmployeeForm(user=request.user)
         form.fields['employee_id_preview'].initial = generate_employee_id()
     return render(request, 'employees/employee_form.html', {'form': form, 'title': 'Add Employee'})
 
@@ -171,7 +171,7 @@ def employee_create(request):
 def employee_update(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
-        form = EmployeeForm(request.POST, request.FILES, instance=employee)
+        form = EmployeeForm(request.POST, request.FILES, instance=employee, user=request.user)
         if form.is_valid():
             form.save()
             log_audit(user=request.user, action='update', model_name='Employee',
@@ -179,7 +179,7 @@ def employee_update(request, pk):
             messages.success(request, 'Employee updated successfully.')
             return redirect('employee_detail', pk=pk)
     else:
-        form = EmployeeForm(instance=employee)
+        form = EmployeeForm(instance=employee, user=request.user)
     return render(request, 'employees/employee_form.html', {'form': form, 'title': 'Edit Employee'})
 
 

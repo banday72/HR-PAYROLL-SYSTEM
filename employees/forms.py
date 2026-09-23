@@ -43,6 +43,14 @@ class EmployeeForm(forms.ModelForm):
             'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user and not user.is_superuser:
+            for f in ['designation', 'salary', 'role', 'status']:
+                if f in self.fields:
+                    del self.fields[f]
+
 
 class ProfileForm(forms.ModelForm):
     class Meta:
