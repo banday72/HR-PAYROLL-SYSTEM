@@ -66,6 +66,13 @@
         </div>
         <div class="header-right">
             {% if user.is_authenticated %}
+            <div class="d-flex align-items-center me-2" style="gap: 8px; padding: 4px 12px; background: #f0f4f8; border-radius: 20px; border: 1px solid #1a5276;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #1a5276, #2980b9); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.75rem; border: 2px solid #1a5276;">AB</div>
+                <div class="text-start">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #1a5276; line-height: 1.1;">Ahmed Banday</div>
+                    <div style="font-size: 0.65rem; color: #e74a3b; font-weight: 600;">CEO</div>
+                </div>
+            </div>
             {% if user.is_superuser %}<span class="badge bg-danger me-1">Super Admin</span>{% elif is_hr %}<span class="badge bg-success me-1">{% if current_employee and current_employee.role == 'manager' %}Manager{% else %}HR{% endif %}</span>{% else %}<span class="badge bg-secondary me-1">Employee</span>{% endif %}
             <div class="d-flex align-items-center" style="gap: 10px;">
                 <div class="text-end">
