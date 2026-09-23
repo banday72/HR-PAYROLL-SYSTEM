@@ -22,6 +22,7 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     'https://hr-payroll-system-one.vercel.app',
     'https://banday72-hr-payroll-system.vercel.app',
+    'https://hr-payroll-system-925qxzmlq-banday.vercel.app',
 ]
 
 INSTALLED_APPS = [
