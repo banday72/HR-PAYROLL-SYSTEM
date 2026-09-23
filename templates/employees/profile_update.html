@@ -12,9 +12,13 @@
             <div class="card-body text-center">
                 <div class="mb-3">
                     {% if employee.profile_picture_b64 %}
-                    <img src="{{ employee.profile_picture_b64 }}" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1a5276;">
-                    {% elif employee.profile_picture %}
-                    <img src="{{ employee.profile_picture.url }}" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1a5276;">
+                        {% if 'pdf' in employee.profile_picture_b64 %}
+                        <a href="{{ employee.profile_picture_b64 }}" target="_blank" class="btn btn-outline-danger">
+                            <i class="fas fa-file-pdf me-2"></i>View PDF Document
+                        </a>
+                        {% else %}
+                        <img src="{{ employee.profile_picture_b64 }}" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #1a5276;">
+                        {% endif %}
                     {% else %}
                     <div style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #1a5276, #2980b9); display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 2rem; border: 3px solid #1a5276;">
                         {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
@@ -37,8 +41,9 @@
                         <input type="text" name="designation" class="form-control" value="{{ employee.designation|default:'' }}" placeholder="e.g. CEO, Manager, HR">
                     </div>
                     <div class="mb-3 text-start">
-                        <label class="form-label fw-bold">Profile Picture</label>
-                        <input type="file" name="profile_picture" class="form-control" accept="image/*">
+                        <label class="form-label fw-bold">Profile Picture / Document</label>
+                        <input type="file" name="profile_picture" class="form-control" accept="image/*,.pdf">
+                        <small class="text-muted">Accepts: JPG, PNG, PDF</small>
                     </div>
                     <button type="submit" class="btn btn-primary w-100"><i class="fas fa-save me-1"></i> Save Profile</button>
                 </form>

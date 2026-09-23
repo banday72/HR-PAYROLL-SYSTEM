@@ -548,7 +548,8 @@ def profile_update(request):
                 if 'profile_picture' in request.FILES:
                     f = request.FILES['profile_picture']
                     ext = f.name.rsplit('.', 1)[-1].lower()
-                    mime = 'image/png' if ext == 'png' else 'image/jpeg'
+                    mime_map = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'pdf': 'application/pdf'}
+                    mime = mime_map.get(ext, 'application/octet-stream')
                     b64 = base64.b64encode(f.read()).decode('utf-8')
                     employee.profile_picture_b64 = f'data:{mime};base64,{b64}'
                 if request.POST.get('designation'):
