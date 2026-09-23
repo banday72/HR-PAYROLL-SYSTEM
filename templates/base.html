@@ -66,7 +66,7 @@
         </div>
         <div class="header-right">
             {% if user.is_authenticated %}
-            {% if user.is_superuser %}<span class="badge bg-danger me-1">Super Admin</span>{% elif is_hr %}<span class="badge bg-success me-1">{% if user.employee.role == 'manager' %}Manager{% else %}HR{% endif %}</span>{% else %}<span class="badge bg-secondary me-1">Employee</span>{% endif %}
+            {% if user.is_superuser %}<span class="badge bg-danger me-1">Super Admin</span>{% elif is_hr %}<span class="badge bg-success me-1">{% if current_employee and current_employee.role == 'manager' %}Manager{% else %}HR{% endif %}</span>{% else %}<span class="badge bg-secondary me-1">Employee</span>{% endif %}
             <div class="d-flex align-items-center" style="gap: 10px;">
                 <div class="text-end">
                     <div style="font-size: 0.85rem; font-weight: 600; color: #1a5276; line-height: 1.2;">{{ user.get_full_name|default:user.username }}</div>
