@@ -6,6 +6,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hr_payroll.settings')
 
+import django
+django.setup()
+
+from django.core.management import call_command
+try:
+    call_command('migrate', '--run-syncdb', '--noinput', verbosity=0)
+except Exception:
+    pass
+
 from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 

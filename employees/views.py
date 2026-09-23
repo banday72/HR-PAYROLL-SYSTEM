@@ -526,35 +526,42 @@ def profile_update(request):
     user = request.user
     employee = get_employee(user)
     if not employee and user.is_superuser:
-        employee, _ = Employee.objects.get_or_create(
-            user=user,
-            defaults={
-                'employee_id': f'ADMIN{user.id}',
-                'first_name': user.first_name or user.username,
-                'last_name': user.last_name or '',
-                'email': user.email or '',
-                'date_of_joining': date.today(),
-                'salary': 0,
-                'role': 'manager',
-                'status': 'active',
-                'designation': 'Administrator',
-            }
-        )
+        try:
+            employee, _ = Employee.objects.get_or_create(
+                user=user,
+                defaults={
+                    'employee_id': f'ADMIN{user.id}',
+                    'first_name': user.first_name or user.username,
+                    'last_name': user.last_name or '',
+                    'email': user.email or f'admin{user.id}@admin.local',
+                    'date_of_joining': date.today(),
+                    'salary': 0,
+                    'role': 'manager',
+                    'status': 'active',
+                    'designation': 'Administrator',
+                }
+            )
+        except Exception:
+            employee = None
     if request.method == 'POST':
         form = ProfileForm(request.POST, instance=user)
         if form.is_valid():
             form.save()
             if employee:
-                if 'profile_picture' in request.FILES:
-                    f = request.FILES['profile_picture']
-                    ext = f.name.rsplit('.', 1)[-1].lower()
-                    mime_map = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'pdf': 'application/pdf'}
-                    mime = mime_map.get(ext, 'application/octet-stream')
-                    b64 = base64.b64encode(f.read()).decode('utf-8')
-                    employee.profile_picture_b64 = f'data:{mime};base64,{b64}'
-                if request.POST.get('designation'):
-                    employee.designation = request.POST['designation']
-                employee.save()
+                try:
+                    if 'profile_picture' in request.FILES:
+                        f = request.FILES['profile_picture']
+                        ext = f.name.rsplit('.', 1)[-1].lower()
+                        mime_map = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'pdf': 'application/pdf'}
+                        mime = mime_map.get(ext, 'application/octet-stream')
+                        b64 = base64.b64encode(f.read()).decode('utf-8')
+                        employee.profile_picture_b64 = f'data:{mime};base64,{b64}'
+                    if request.POST.get('designation'):
+                        employee.designation = request.POST['designation']
+                    employee.save()
+                except Exception as e:
+                    messages.warning(request, f'Profile saved but file upload failed: {str(e)}')
+                    return redirect('profile_update')
             messages.success(request, 'Profile updated successfully.')
             return redirect('profile_update')
     else:
