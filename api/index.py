@@ -92,6 +92,12 @@ try:
         'Finance', 'Accountant', 62000, reports_to=mgr1)
     get_or_create_emp('EMP010', 'Hira', 'Shah', 'hira.shah@company.com',
         'Human Resources', 'HR Admin', 58000, reports_to=hm)
+
+    # Auto-create public payslip link for EMP001
+    from payroll.models import PublicPayrollLink
+    emp001 = Employee.objects.filter(employee_id='EMP001').first()
+    if emp001 and not PublicPayrollLink.objects.filter(employee=emp001).exists():
+        PublicPayrollLink.objects.create(employee=emp001, is_active=True)
 except Exception:
     pass
 
