@@ -5,7 +5,7 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('payroll', '0004_boutiqueproduct_budgetloan_boutiqueissue_payrollbreakdown'),
+        ('payroll', '0004_boutiqueproduct_boutiqueissue_delete_boutiqueitem'),
         ('employees', '0009_employee_reports_to'),
     ]
 

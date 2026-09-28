@@ -4,16 +4,20 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import date, timedelta
-from employees.models import Employee
-from .models import (
-    Notification, EmployeeDocument, PerformanceReview,
-    Training, TrainingEnrollment, TravelRequest, OvertimeRecord
-)
+
+
+def create_notification(employee, title, message, notif_type='info', link=''):
+    from .models import Notification
+    return Notification.objects.create(
+        employee=employee, title=title, message=message,
+        notif_type=notif_type, link=link
+    )
 
 
 # ============ ORG CHART ============
 @login_required
 def org_chart(request):
+    from employees.models import Employee
     ceo = Employee.objects.filter(employee_id='CEO001').first()
     officers = Employee.objects.filter(reports_to=ceo, status='active') if ceo else []
     employees_map = {}
@@ -28,6 +32,8 @@ def org_chart(request):
 # ============ NOTIFICATIONS ============
 @login_required
 def notification_list(request):
+    from employees.models import Employee
+    from .models import Notification
     emp = Employee.objects.filter(user=request.user).first()
     if emp:
         notifs = Notification.objects.filter(employee=emp)
@@ -35,14 +41,14 @@ def notification_list(request):
         notifs = Notification.objects.all()[:100]
     else:
         notifs = Notification.objects.none()
-    unread = notifs.filter(is_read=False).count()
     return render(request, 'hr_modules/notification_list.html', {
-        'notifications': notifs, 'unread_count': unread
+        'notifications': notifs, 'unread_count': notifs.filter(is_read=False).count()
     })
 
 
 @login_required
 def notification_mark_read(request, pk):
+    from .models import Notification
     notif = get_object_or_404(Notification, pk=pk)
     notif.is_read = True
     notif.save()
@@ -53,22 +59,19 @@ def notification_mark_read(request, pk):
 
 @login_required
 def notification_mark_all_read(request):
+    from employees.models import Employee
+    from .models import Notification
     emp = Employee.objects.filter(user=request.user).first()
     if emp:
         Notification.objects.filter(employee=emp, is_read=False).update(is_read=True)
     return redirect('notification_list')
 
 
-def create_notification(employee, title, message, notif_type='info', link=''):
-    return Notification.objects.create(
-        employee=employee, title=title, message=message,
-        notif_type=notif_type, link=link
-    )
-
-
 # ============ EMPLOYEE DOCUMENTS ============
 @login_required
 def document_list(request):
+    from employees.models import Employee
+    from .models import EmployeeDocument
     emp = Employee.objects.filter(user=request.user).first()
     if request.user.is_superuser or (emp and emp.is_hr):
         docs = EmployeeDocument.objects.all()
@@ -84,6 +87,8 @@ def document_list(request):
 
 @login_required
 def document_upload(request):
+    from employees.models import Employee
+    from .models import EmployeeDocument
     emp = Employee.objects.filter(user=request.user).first()
     if request.method == 'POST':
         target_emp_id = request.POST.get('employee_id', emp.employee_id if emp else None)
@@ -91,7 +96,6 @@ def document_upload(request):
         if not target_emp:
             messages.error(request, 'Employee not found.')
             return redirect('document_list')
-
         uploaded_file = request.FILES.get('file')
         if uploaded_file:
             import base64
@@ -116,6 +120,7 @@ def document_upload(request):
 def document_download(request, pk):
     import base64
     from django.http import HttpResponse
+    from .models import EmployeeDocument
     doc = get_object_or_404(EmployeeDocument, pk=pk)
     file_bytes = base64.b64decode(doc.file_data)
     response = HttpResponse(file_bytes, content_type='application/octet-stream')
@@ -125,6 +130,7 @@ def document_download(request, pk):
 
 @login_required
 def document_delete(request, pk):
+    from .models import EmployeeDocument
     doc = get_object_or_404(EmployeeDocument, pk=pk)
     if request.method == 'POST':
         doc.delete()
@@ -136,6 +142,9 @@ def document_delete(request, pk):
 # ============ PERFORMANCE REVIEWS ============
 @login_required
 def review_list(request):
+    from employees.models import Employee
+    from .models import PerformanceReview
+    from django.db.models import Avg
     emp = Employee.objects.filter(user=request.user).first()
     period_filter = request.GET.get('period', '')
     year_filter = request.GET.get('year', '')
@@ -159,10 +168,8 @@ def review_list(request):
     total_reviews = reviews.count()
     completed = reviews.filter(status='completed').count()
 
-    from django.db.models import Avg
     emp_stats = []
     if request.user.is_superuser or (emp and emp.is_hr):
-        from django.db.models import Count
         all_emps = Employee.objects.filter(status='active')
         for e in all_emps:
             e_reviews = PerformanceReview.objects.filter(employee=e)
@@ -171,7 +178,7 @@ def review_list(request):
             emp_stats.append({'employee': e, 'avg_rating': e_avg, 'review_count': e_count})
 
     return render(request, 'hr_modules/review_list.html', {
-        'reviews': reviews, 'avg_rating': round(avg_rating, 2),
+        'reviews': reviews, 'avg_rating': round(float(avg_rating), 2),
         'total_reviews': total_reviews, 'completed': completed,
         'emp_stats': emp_stats, 'period_filter': period_filter,
         'year_filter': year_filter, 'employee_filter': employee_filter,
@@ -180,6 +187,8 @@ def review_list(request):
 
 @login_required
 def review_create(request):
+    from employees.models import Employee
+    from .models import PerformanceReview
     if request.method == 'POST':
         emp_id = request.POST.get('employee_id')
         emp = get_object_or_404(Employee, employee_id=emp_id)
@@ -211,6 +220,7 @@ def review_create(request):
 
 @login_required
 def review_detail(request, pk):
+    from .models import PerformanceReview
     review = get_object_or_404(PerformanceReview, pk=pk)
     return render(request, 'hr_modules/review_detail.html', {'review': review})
 
@@ -218,12 +228,15 @@ def review_detail(request, pk):
 # ============ TRAINING MODULE ============
 @login_required
 def training_list(request):
+    from .models import Training
     trainings = Training.objects.all()
     return render(request, 'hr_modules/training_list.html', {'trainings': trainings})
 
 
 @login_required
 def training_create(request):
+    from employees.models import Employee
+    from .models import Training
     if request.method == 'POST':
         creator = Employee.objects.filter(user=request.user).first()
         training = Training.objects.create(
@@ -242,6 +255,8 @@ def training_create(request):
 
 @login_required
 def training_enroll(request, pk):
+    from employees.models import Employee
+    from .models import Training, TrainingEnrollment
     training = get_object_or_404(Training, pk=pk)
     if request.method == 'POST':
         emp_ids = request.POST.getlist('employees')
@@ -263,6 +278,7 @@ def training_enroll(request, pk):
 
 @login_required
 def training_detail(request, pk):
+    from .models import Training, TrainingEnrollment
     training = get_object_or_404(Training, pk=pk)
     enrollments = TrainingEnrollment.objects.filter(training=training)
     return render(request, 'hr_modules/training_detail.html', {
@@ -273,6 +289,8 @@ def training_detail(request, pk):
 # ============ TRAVEL & REIMBURSEMENT ============
 @login_required
 def travel_list(request):
+    from employees.models import Employee
+    from .models import TravelRequest
     emp = Employee.objects.filter(user=request.user).first()
     if request.user.is_superuser or (emp and emp.is_hr):
         travels = TravelRequest.objects.all()
@@ -285,6 +303,8 @@ def travel_list(request):
 
 @login_required
 def travel_create(request):
+    from employees.models import Employee
+    from .models import TravelRequest
     emp = Employee.objects.filter(user=request.user).first()
     if request.method == 'POST':
         import base64
@@ -311,8 +331,10 @@ def travel_create(request):
 
 @login_required
 def travel_action(request, pk):
+    from .models import TravelRequest
     travel = get_object_or_404(TravelRequest, pk=pk)
     if request.method == 'POST':
+        from employees.models import Employee
         action = request.POST.get('action')
         reviewer = Employee.objects.filter(user=request.user).first()
         travel.status = action
@@ -329,6 +351,8 @@ def travel_action(request, pk):
 # ============ OVERTIME TRACKING ============
 @login_required
 def overtime_list(request):
+    from employees.models import Employee
+    from .models import OvertimeRecord
     emp = Employee.objects.filter(user=request.user).first()
     if request.user.is_superuser or (emp and emp.is_hr):
         records = OvertimeRecord.objects.all()
@@ -341,6 +365,8 @@ def overtime_list(request):
 
 @login_required
 def overtime_create(request):
+    from employees.models import Employee
+    from .models import OvertimeRecord
     emp = Employee.objects.filter(user=request.user).first()
     if request.method == 'POST':
         ot = OvertimeRecord.objects.create(
@@ -361,8 +387,10 @@ def overtime_create(request):
 
 @login_required
 def overtime_action(request, pk):
+    from .models import OvertimeRecord
     ot = get_object_or_404(OvertimeRecord, pk=pk)
     if request.method == 'POST':
+        from employees.models import Employee
         action = request.POST.get('action')
         reviewer = Employee.objects.filter(user=request.user).first()
         ot.status = action
