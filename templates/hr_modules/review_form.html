@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Create Review{% endblock %}
+{% block page_title %}<i class="fas fa-plus-circle me-2"></i>Create Performance Review{% endblock %}
+
+{% block extra_css %}
+<style>
+    .score-slider { width: 100%; accent-color: #2980b9; }
+    .score-value { font-weight: 700; color: #1a5276; font-size: 1.2rem; min-width: 40px; text-align: center; }
+    .score-label { font-size: 0.85rem; color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-pen me-1"></i> Review Form</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Employee <span class="text-danger">*</span></label>
+                            <select name="employee_id" class="form-select" required>
+                                <option value="">-- Select Employee --</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.employee_id }}">{{ emp.employee_id }} - {{ emp.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Review Period <span class="text-danger">*</span></label>
+                            <select name="period" class="form-select" required>
+                                <option value="Q1">Q1 (Jan-Mar)</option>
+                                <option value="Q2">Q2 (Apr-Jun)</option>
+                                <option value="Q3">Q3 (Jul-Sep)</option>
+                                <option value="Q4">Q4 (Oct-Dec)</option>
+                                <option value="annual">Annual</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Year <span class="text-danger">*</span></label>
+                            <input type="number" name="year" class="form-control" value="2026" min="2020" max="2030" required>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-chart-bar me-1"></i> Score Ratings (1-5)</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="score-label fw-bold">Technical Skills</span>
+                                        <span class="score-value" id="technical_val">3</span>
+                                    </div>
+                                    <input type="range" name="technical_score" class="score-slider" min="1" max="5" value="3" oninput="document.getElementById('technical_val').textContent=this.value">
+                                    <div class="d-flex justify-content-between"><small class="text-muted">1 - Poor</small><small class="text-muted">5 - Excellent</small></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="score-label fw-bold">Communication</span>
+                                        <span class="score-value" id="communication_val">3</span>
+                                    </div>
+                                    <input type="range" name="communication_score" class="score-slider" min="1" max="5" value="3" oninput="document.getElementById('communication_val').textContent=this.value">
+                                    <div class="d-flex justify-content-between"><small class="text-muted">1 - Poor</small><small class="text-muted">5 - Excellent</small></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="score-label fw-bold">Teamwork</span>
+                                        <span class="score-value" id="teamwork_val">3</span>
+                                    </div>
+                                    <input type="range" name="teamwork_score" class="score-slider" min="1" max="5" value="3" oninput="document.getElementById('teamwork_val').textContent=this.value">
+                                    <div class="d-flex justify-content-between"><small class="text-muted">1 - Poor</small><small class="text-muted">5 - Excellent</small></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="score-label fw-bold">Leadership</span>
+                                        <span class="score-value" id="leadership_val">3</span>
+                                    </div>
+                                    <input type="range" name="leadership_score" class="score-slider" min="1" max="5" value="3" oninput="document.getElementById('leadership_val').textContent=this.value">
+                                    <div class="d-flex justify-content-between"><small class="text-muted">1 - Poor</small><small class="text-muted">5 - Excellent</small></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="score-label fw-bold">Initiative</span>
+                                        <span class="score-value" id="initiative_val">3</span>
+                                    </div>
+                                    <input type="range" name="initiative_score" class="score-slider" min="1" max="5" value="3" oninput="document.getElementById('initiative_val').textContent=this.value">
+                                    <div class="d-flex justify-content-between"><small class="text-muted">1 - Poor</small><small class="text-muted">5 - Excellent</small></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-comments me-1"></i> Comments & Feedback</h6>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Strengths</label>
+                        <textarea name="strengths" class="form-control" rows="3" placeholder="Key strengths demonstrated..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Areas for Improvement</label>
+                        <textarea name="improvements" class="form-control" rows="3" placeholder="Areas that need improvement..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Goals for Next Period</label>
+                        <textarea name="goals" class="form-control" rows="3" placeholder="Goals and objectives..."></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Additional Comments</label>
+                        <textarea name="comments" class="form-control" rows="3" placeholder="Any other comments..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'review_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Create Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

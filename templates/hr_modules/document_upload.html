@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Upload Document{% endblock %}
+{% block page_title %}<i class="fas fa-upload me-2"></i>Upload Document{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-upload me-1"></i> Document Details</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Employee <span class="text-danger">*</span></label>
+                        <select name="employee_id" class="form-select" required>
+                            <option value="">-- Select Employee --</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.employee_id }}">{{ emp.employee_id }} - {{ emp.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Document Type <span class="text-danger">*</span></label>
+                        <select name="doc_type" class="form-select" required>
+                            <option value="cnic">CNIC</option>
+                            <option value="degree">Degree</option>
+                            <option value="experience">Experience Letter</option>
+                            <option value="contract">Employment Contract</option>
+                            <option value="offer">Offer Letter</option>
+                            <option value="noc">NOC</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Title <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. CNIC Front Side" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">File <span class="text-danger">*</span></label>
+                        <input type="file" name="file" class="form-control" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                        <small class="text-muted">Supported formats: PDF, JPG, PNG, DOC, DOCX (Max 10MB)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Notes</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="Optional notes about this document..."></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'document_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-upload me-1"></i> Upload Document</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

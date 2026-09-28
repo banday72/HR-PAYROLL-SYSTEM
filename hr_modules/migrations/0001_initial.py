@@ -1,0 +1,131 @@
+from django.db import migrations, models
+import django.db.models.deletion
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('employees', '0009_employee_reports_to'),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='Notification',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('title', models.CharField(max_length=200)),
+                ('message', models.TextField()),
+                ('notif_type', models.CharField(choices=[('info', 'Info'), ('success', 'Success'), ('warning', 'Warning'), ('danger', 'Danger')], default='info', max_length=20)),
+                ('is_read', models.BooleanField(default=False)),
+                ('link', models.CharField(blank=True, max_length=300)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('employee', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to='employees.employee')),
+            ],
+            options={'ordering': ['-created_at']},
+        ),
+        migrations.CreateModel(
+            name='EmployeeDocument',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('doc_type', models.CharField(choices=[('cnic', 'CNIC'), ('degree', 'Degree'), ('experience', 'Experience Letter'), ('contract', 'Employment Contract'), ('offer', 'Offer Letter'), ('noc', 'NOC'), ('other', 'Other')], max_length=20)),
+                ('title', models.CharField(max_length=200)),
+                ('file_data', models.TextField(help_text='Base64 encoded file content')),
+                ('file_name', models.CharField(max_length=200)),
+                ('file_size', models.IntegerField(default=0, help_text='File size in bytes')),
+                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
+                ('notes', models.TextField(blank=True)),
+                ('employee', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='employees.employee')),
+            ],
+            options={'ordering': ['-uploaded_at']},
+        ),
+        migrations.CreateModel(
+            name='PerformanceReview',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('period', models.CharField(choices=[('Q1', 'Q1 (Jan-Mar)'), ('Q2', 'Q2 (Apr-Jun)'), ('Q3', 'Q3 (Jul-Sep)'), ('Q4', 'Q4 (Oct-Dec)'), ('annual', 'Annual')], max_length=10)),
+                ('year', models.IntegerField()),
+                ('technical_score', models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], default=3)),
+                ('communication_score', models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], default=3)),
+                ('teamwork_score', models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], default=3)),
+                ('leadership_score', models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], default=3)),
+                ('initiative_score', models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')], default=3)),
+                ('overall_rating', models.DecimalField(decimal_places=2, default=3.0, max_digits=3)),
+                ('strengths', models.TextField(blank=True)),
+                ('improvements', models.TextField(blank=True)),
+                ('goals', models.TextField(blank=True)),
+                ('comments', models.TextField(blank=True)),
+                ('status', models.CharField(choices=[('draft', 'Draft'), ('completed', 'Completed')], default='draft', max_length=20)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('employee', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reviews', to='employees.employee')),
+                ('reviewer', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reviews_given', to='employees.employee')),
+            ],
+            options={'ordering': ['-year', '-created_at'], 'unique_together': {('employee', 'period', 'year')}},
+        ),
+        migrations.CreateModel(
+            name='Training',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('title', models.CharField(max_length=200)),
+                ('description', models.TextField(blank=True)),
+                ('provider', models.CharField(blank=True, max_length=200)),
+                ('start_date', models.DateField()),
+                ('end_date', models.DateField(blank=True, null=True)),
+                ('status', models.CharField(choices=[('planned', 'Planned'), ('ongoing', 'Ongoing'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='planned', max_length=20)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='trainings_created', to='employees.employee')),
+            ],
+            options={'ordering': ['-start_date']},
+        ),
+        migrations.CreateModel(
+            name='TrainingEnrollment',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('status', models.CharField(choices=[('enrolled', 'Enrolled'), ('in_progress', 'In Progress'), ('completed', 'Completed'), ('dropped', 'Dropped')], default='enrolled', max_length=20)),
+                ('completion_date', models.DateField(blank=True, null=True)),
+                ('certificate', models.TextField(blank=True, help_text='Base64 encoded certificate')),
+                ('score', models.DecimalField(blank=True, decimal_places=2, max_digits=5, null=True)),
+                ('feedback', models.TextField(blank=True)),
+                ('enrolled_at', models.DateTimeField(auto_now_add=True)),
+                ('employee', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='trainings', to='employees.employee')),
+                ('training', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='enrollments', to='hr_modules.training')),
+            ],
+            options={'unique_together': {('training', 'employee')}},
+        ),
+        migrations.CreateModel(
+            name='TravelRequest',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('destination', models.CharField(max_length=200)),
+                ('purpose', models.TextField()),
+                ('start_date', models.DateField()),
+                ('end_date', models.DateField()),
+                ('estimated_cost', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
+                ('actual_cost', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
+                ('status', models.CharField(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected'), ('completed', 'Completed')], default='pending', max_length=20)),
+                ('receipt_data', models.TextField(blank=True, help_text='Base64 encoded receipt')),
+                ('notes', models.TextField(blank=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('updated_at', models.DateTimeField(auto_now=True)),
+                ('approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='travels_approved', to='employees.employee')),
+                ('employee', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='travel_requests', to='employees.employee')),
+            ],
+            options={'ordering': ['-created_at']},
+        ),
+        migrations.CreateModel(
+            name='OvertimeRecord',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('date', models.DateField()),
+                ('hours', models.DecimalField(decimal_places=2, max_digits=4)),
+                ('reason', models.TextField()),
+                ('status', models.CharField(choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')], default='pending', max_length=20)),
+                ('rate_multiplier', models.DecimalField(decimal_places=2, default=1.5, max_digits=3, help_text='Overtime rate multiplier')),
+                ('amount', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
+                ('approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='overtimes_approved', to='employees.employee')),
+                ('employee', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='overtime_records', to='employees.employee')),
+            ],
+            options={'unique_together': {('employee', 'date')}, 'ordering': ['-date']},
+        ),
+    ]

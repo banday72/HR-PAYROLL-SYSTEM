@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Trainings{% endblock %}
+{% block page_title %}<i class="fas fa-graduation-cap me-2"></i>Training Programs{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <div></div>
+    <div>
+        <a href="{% url 'training_create' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> New Training</a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    {% for training in trainings %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center" style="border-top: 3px solid {% if training.status == 'completed' %}#1cc88a{% elif training.status == 'ongoing' %}#2980b9{% elif training.status == 'planned' %}#f6c23e{% else %}#e74a3b{% endif %};">
+                <h6 class="m-0 font-weight-bold text-primary" style="font-size:0.9rem;">{{ training.title|truncatewords:5 }}</h6>
+                {% if training.status == 'completed' %}
+                <span class="badge bg-success">Completed</span>
+                {% elif training.status == 'ongoing' %}
+                <span class="badge bg-info">Ongoing</span>
+                {% elif training.status == 'planned' %}
+                <span class="badge bg-warning text-dark">Planned</span>
+                {% else %}
+                <span class="badge bg-danger">Cancelled</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if training.description %}
+                <p class="text-muted small mb-2">{{ training.description|truncatewords:15 }}</p>
+                {% endif %}
+                <p class="mb-1"><small><i class="fas fa-calendar me-1 text-primary"></i> {{ training.start_date|date:"M d, Y" }}{% if training.end_date %} - {{ training.end_date|date:"M d, Y" }}{% endif %}</small></p>
+                {% if training.provider %}
+                <p class="mb-2"><small><i class="fas fa-building me-1 text-primary"></i> {{ training.provider }}</small></p>
+                {% endif %}
+                <p class="mb-0"><small><i class="fas fa-users me-1 text-primary"></i> {{ training.enrollments.count }} enrolled</small></p>
+            </div>
+            <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                <a href="{% url 'training_detail' training.pk %}" class="btn btn-sm btn-outline-info"><i class="fas fa-eye me-1"></i> View</a>
+                <a href="{% url 'training_enroll' training.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-user-plus me-1"></i> Enroll</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-graduation-cap fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Trainings Found</h5>
+                <p class="text-muted">Create your first training program to get started.</p>
+                <a href="{% url 'training_create' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> New Training</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

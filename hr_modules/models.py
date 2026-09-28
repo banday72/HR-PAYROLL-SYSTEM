@@ -1,0 +1,196 @@
+from django.db import models
+from employees.models import Employee
+import uuid
+
+
+class Notification(models.Model):
+    TYPE_CHOICES = [
+        ('info', 'Info'),
+        ('success', 'Success'),
+        ('warning', 'Warning'),
+        ('danger', 'Danger'),
+    ]
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    notif_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='info')
+    is_read = models.BooleanField(default=False)
+    link = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.title}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class EmployeeDocument(models.Model):
+    DOC_TYPE_CHOICES = [
+        ('cnic', 'CNIC'),
+        ('degree', 'Degree'),
+        ('experience', 'Experience Letter'),
+        ('contract', 'Employment Contract'),
+        ('offer', 'Offer Letter'),
+        ('noc', 'NOC'),
+        ('other', 'Other'),
+    ]
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='documents')
+    doc_type = models.CharField(max_length=20, choices=DOC_TYPE_CHOICES)
+    title = models.CharField(max_length=200)
+    file_data = models.TextField(help_text='Base64 encoded file content')
+    file_name = models.CharField(max_length=200)
+    file_size = models.IntegerField(default=0, help_text='File size in bytes')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.get_doc_type_display()}: {self.title}"
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+
+class PerformanceReview(models.Model):
+    RATING_CHOICES = [(i, str(i)) for i in range(1, 6)]
+    PERIOD_CHOICES = [
+        ('Q1', 'Q1 (Jan-Mar)'),
+        ('Q2', 'Q2 (Apr-Jun)'),
+        ('Q3', 'Q3 (Jul-Sep)'),
+        ('Q4', 'Q4 (Oct-Dec)'),
+        ('annual', 'Annual'),
+    ]
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='reviews')
+    reviewer = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, related_name='reviews_given')
+    period = models.CharField(max_length=10, choices=PERIOD_CHOICES)
+    year = models.IntegerField()
+    technical_score = models.IntegerField(choices=RATING_CHOICES, default=3)
+    communication_score = models.IntegerField(choices=RATING_CHOICES, default=3)
+    teamwork_score = models.IntegerField(choices=RATING_CHOICES, default=3)
+    leadership_score = models.IntegerField(choices=RATING_CHOICES, default=3)
+    initiative_score = models.IntegerField(choices=RATING_CHOICES, default=3)
+    overall_rating = models.DecimalField(max_digits=3, decimal_places=2, default=3.0)
+    strengths = models.TextField(blank=True)
+    improvements = models.TextField(blank=True)
+    goals = models.TextField(blank=True)
+    comments = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=[('draft', 'Draft'), ('completed', 'Completed')], default='draft')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        scores = [self.technical_score, self.communication_score, self.teamwork_score,
+                  self.leadership_score, self.initiative_score]
+        self.overall_rating = sum(scores) / len(scores)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.get_period_display()} {self.year}: {self.overall_rating}"
+
+    class Meta:
+        unique_together = ['employee', 'period', 'year']
+        ordering = ['-year', '-created_at']
+
+
+class Training(models.Model):
+    STATUS_CHOICES = [
+        ('planned', 'Planned'),
+        ('ongoing', 'Ongoing'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    provider = models.CharField(max_length=200, blank=True)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planned')
+    created_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, related_name='trainings_created')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.get_status_display()})"
+
+    class Meta:
+        ordering = ['-start_date']
+
+
+class TrainingEnrollment(models.Model):
+    STATUS_CHOICES = [
+        ('enrolled', 'Enrolled'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('dropped', 'Dropped'),
+    ]
+    training = models.ForeignKey(Training, on_delete=models.CASCADE, related_name='enrollments')
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='trainings')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='enrolled')
+    completion_date = models.DateField(null=True, blank=True)
+    certificate = models.TextField(blank=True, help_text='Base64 encoded certificate')
+    score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    feedback = models.TextField(blank=True)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.training.title}"
+
+    class Meta:
+        unique_together = ['training', 'employee']
+
+
+class TravelRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('completed', 'Completed'),
+    ]
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='travel_requests')
+    destination = models.CharField(max_length=200)
+    purpose = models.TextField()
+    start_date = models.DateField()
+    end_date = models.DateField()
+    estimated_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    actual_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    approved_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='travels_approved')
+    receipt_data = models.TextField(blank=True, help_text='Base64 encoded receipt')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.destination} ({self.get_status_display()})"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class OvertimeRecord(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='overtime_records')
+    date = models.DateField()
+    hours = models.DecimalField(max_digits=4, decimal_places=2)
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    approved_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='overtimes_approved')
+    rate_multiplier = models.DecimalField(max_digits=3, decimal_places=2, default=1.5, help_text='Overtime rate multiplier')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.employee and self.hours:
+            daily = self.employee.salary / 30 / 8
+            self.amount = float(self.hours) * float(daily) * float(self.rate_multiplier)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.date} - {self.hours}h"
+
+    class Meta:
+        unique_together = ['employee', 'date']
+        ordering = ['-date']

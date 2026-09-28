@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Enroll Employees{% endblock %}
+{% block page_title %}<i class="fas fa-user-plus me-2"></i>Enroll in Training: {{ training.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-info-circle me-1"></i> Training Info</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Title:</strong> {{ training.title }}</p>
+                        <p class="mb-1"><strong>Provider:</strong> {{ training.provider|default:"-" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Start:</strong> {{ training.start_date|date:"M d, Y" }}</p>
+                        <p class="mb-1"><strong>Status:</strong>
+                            {% if training.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% elif training.status == 'ongoing' %}
+                            <span class="badge bg-info">Ongoing</span>
+                            {% elif training.status == 'planned' %}
+                            <span class="badge bg-warning text-dark">Planned</span>
+                            {% else %}
+                            <span class="badge bg-danger">Cancelled</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-users me-1"></i> Select Employees to Enroll</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <input type="text" id="empSearch" class="form-control" placeholder="Search employees by name or ID..." onkeyup="filterEmployees()">
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="selectAll" onclick="toggleAll()">
+                        <label class="form-check-label fw-bold" for="selectAll">Select All</label>
+                    </div>
+                    <div class="border rounded p-3" style="max-height:400px;overflow-y:auto;">
+                        {% for emp in employees %}
+                        <div class="form-check py-2 border-bottom emp-row">
+                            <input class="form-check-input emp-checkbox" type="checkbox" name="employees" value="{{ emp.employee_id }}" id="emp_{{ emp.employee_id }}">
+                            <label class="form-check-label w-100" for="emp_{{ emp.employee_id }}">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:36px;height:36px;background:#eaf2f8;color:#2980b9;font-weight:600;font-size:0.65rem;flex-shrink:0;">
+                                        {{ emp.first_name|first|upper }}{{ emp.last_name|first|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold" style="font-size:0.85rem;">{{ emp.full_name }}</div>
+                                        <div class="text-muted" style="font-size:0.7rem;">{{ emp.employee_id }} | {{ emp.designation|default:"-" }} | {{ emp.department|default:"-" }}</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 d-flex justify-content-between">
+                        <a href="{% url 'training_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i> Enroll Selected</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterEmployees() {
+    const query = document.getElementById('empSearch').value.toLowerCase();
+    document.querySelectorAll('.emp-row').forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+    });
+}
+function toggleAll() {
+    const checked = document.getElementById('selectAll').checked;
+    document.querySelectorAll('.emp-checkbox').forEach(function(cb) {
+        if (cb.closest('.emp-row').style.display !== 'none') cb.checked = checked;
+    });
+}
+</script>
+{% endblock %}

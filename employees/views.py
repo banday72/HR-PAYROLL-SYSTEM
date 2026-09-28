@@ -2,6 +2,7 @@ import csv
 import io
 import base64
 from datetime import date
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
@@ -554,4 +555,32 @@ def profile_update(request):
     return render(request, 'employees/profile_update.html', {
         'form': form,
         'employee': employee,
+    })
+
+
+@login_required
+def dashboard_stats(request):
+    from django.db.models import Count, Avg
+    from attendance.models import Attendance
+    from datetime import date, timedelta
+
+    depts = Department.objects.annotate(count=Count('employee')).filter(count__gt=0)
+    dept_labels = [d.name for d in depts]
+    dept_counts = [d.count for d in depts]
+
+    today = date.today()
+    statuses = Attendance.objects.filter(date=today).values('status').annotate(count=Count('id'))
+    att_map = {s['status']: s['count'] for s in statuses}
+    att_labels = ['Present', 'Absent', 'Late', 'Half Day', 'Holiday']
+    att_counts = [att_map.get('present', 0), att_map.get('absent', 0), att_map.get('late', 0),
+                  att_map.get('half_day', 0), att_map.get('holiday', 0)]
+
+    dept_salaries = Department.objects.annotate(avg_sal=Avg('employee__salary')).filter(avg_sal__isnull=False)
+    sal_labels = [d.name for d in dept_salaries]
+    sal_totals = [float(d.avg_sal) for d in dept_salaries]
+
+    return JsonResponse({
+        'dept_labels': dept_labels, 'dept_counts': dept_counts,
+        'attendance_labels': att_labels, 'attendance_counts': att_counts,
+        'salary_labels': sal_labels, 'salary_totals': sal_totals,
     })

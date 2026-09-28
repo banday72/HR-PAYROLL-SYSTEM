@@ -1,0 +1,26 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('org-chart/', views.org_chart, name='org_chart'),
+    path('notifications/', views.notification_list, name='notification_list'),
+    path('notifications/<int:pk>/read/', views.notification_mark_read, name='notification_mark_read'),
+    path('notifications/read-all/', views.notification_mark_all_read, name='notification_mark_all_read'),
+    path('documents/', views.document_list, name='document_list'),
+    path('documents/upload/', views.document_upload, name='document_upload'),
+    path('documents/<int:pk>/download/', views.document_download, name='document_download'),
+    path('documents/<int:pk>/delete/', views.document_delete, name='document_delete'),
+    path('reviews/', views.review_list, name='review_list'),
+    path('reviews/create/', views.review_create, name='review_create'),
+    path('reviews/<int:pk>/', views.review_detail, name='review_detail'),
+    path('training/', views.training_list, name='training_list'),
+    path('training/create/', views.training_create, name='training_create'),
+    path('training/<int:pk>/', views.training_detail, name='training_detail'),
+    path('training/<int:pk>/enroll/', views.training_enroll, name='training_enroll'),
+    path('travel/', views.travel_list, name='travel_list'),
+    path('travel/create/', views.travel_create, name='travel_create'),
+    path('travel/<int:pk>/action/', views.travel_action, name='travel_action'),
+    path('overtime/', views.overtime_list, name='overtime_list'),
+    path('overtime/create/', views.overtime_create, name='overtime_create'),
+    path('overtime/<int:pk>/action/', views.overtime_action, name='overtime_action'),
+]

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Travel Request{% endblock %}
+{% block page_title %}<i class="fas fa-plane-departure me-2"></i>Submit Travel Request{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-alt me-1"></i> Travel Request Details</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Destination <span class="text-danger">*</span></label>
+                        <input type="text" name="destination" class="form-control" placeholder="e.g. Lahore, Islamabad" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Purpose <span class="text-danger">*</span></label>
+                        <textarea name="purpose" class="form-control" rows="3" placeholder="Purpose of travel..." required></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">End Date <span class="text-danger">*</span></label>
+                            <input type="date" name="end_date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Estimated Cost (Rs.)</label>
+                        <input type="number" name="estimated_cost" class="form-control" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Receipt (Optional)</label>
+                        <input type="file" name="receipt" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Upload supporting receipt if available.</small>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Notes</label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="Any additional notes..."></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'travel_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i> Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

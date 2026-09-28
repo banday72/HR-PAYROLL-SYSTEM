@@ -1,5 +1,5 @@
 def role_context(request):
-    context = {'is_hr': False, 'current_employee': None, 'ceo_employee': None, 'current_manager': None}
+    context = {'is_hr': False, 'current_employee': None, 'ceo_employee': None, 'current_manager': None, 'unread_notif_count': 0}
     if request.user.is_authenticated:
         from employees.models import Employee
 
@@ -15,7 +15,11 @@ def role_context(request):
             context['is_hr'] = emp.is_hr or emp.employee_id == 'CEO001'
             if emp.reports_to:
                 context['current_manager'] = emp.reports_to
+            from hr_modules.models import Notification
+            context['unread_notif_count'] = Notification.objects.filter(employee=emp, is_read=False).count()
         except Employee.DoesNotExist:
             if request.user.is_superuser:
                 context['is_hr'] = True
+                from hr_modules.models import Notification
+                context['unread_notif_count'] = Notification.objects.filter(is_read=False).count()
     return context

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Travel Action{% endblock %}
+{% block page_title %}<i class="fas fa-gavel me-2"></i>Review Travel Request{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-plane me-1"></i> Travel Request Details</h6>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong><i class="fas fa-user me-1 text-primary"></i> Employee:</strong> {{ travel.employee.full_name }} ({{ travel.employee.employee_id }})</p>
+                        <p class="mb-2"><strong><i class="fas fa-map-marker-alt me-1 text-danger"></i> Destination:</strong> {{ travel.destination }}</p>
+                        <p class="mb-0"><strong><i class="fas fa-calendar me-1 text-primary"></i> Period:</strong> {{ travel.start_date|date:"M d, Y" }} - {{ travel.end_date|date:"M d, Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong><i class="fas fa-money-bill me-1 text-primary"></i> Est. Cost:</strong> Rs. {{ travel.estimated_cost|floatformat:2 }}</p>
+                        <p class="mb-2"><strong><i class="fas fa-info-circle me-1 text-primary"></i> Status:</strong>
+                            {% if travel.status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                            {% elif travel.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif travel.status == 'rejected' %}
+                            <span class="badge bg-danger">Rejected</span>
+                            {% else %}
+                            <span class="badge bg-info">Completed</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-0"><strong><i class="fas fa-user-tie me-1 text-primary"></i> Reviewed By:</strong> {{ travel.approved_by.full_name|default:"-" }}</p>
+                    </div>
+                </div>
+
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-primary"><i class="fas fa-comment me-1"></i> Purpose</h6>
+                        <p class="mb-0 text-muted">{{ travel.purpose }}</p>
+                    </div>
+                </div>
+
+                {% if travel.notes %}
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-primary"><i class="fas fa-sticky-note me-1"></i> Notes</h6>
+                        <p class="mb-0 text-muted">{{ travel.notes }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if travel.status == 'pending' %}
+                <hr>
+                <h6 class="fw-bold text-primary mb-3"><i class="fas fa-gavel me-1"></i> Decision</h6>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-3">
+                        <a href="{% url 'travel_list' %}" class="btn btn-secondary flex-fill"><i class="fas fa-arrow-left me-1"></i> Cancel</a>
+                        <button type="submit" name="action" value="rejected" class="btn btn-danger flex-fill"><i class="fas fa-times me-1"></i> Reject</button>
+                        <button type="submit" name="action" value="approved" class="btn btn-success flex-fill"><i class="fas fa-check me-1"></i> Approve</button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'travel_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back to List</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

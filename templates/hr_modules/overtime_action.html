@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Overtime Action{% endblock %}
+{% block page_title %}<i class="fas fa-gavel me-2"></i>Review Overtime Request{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clock me-1"></i> Overtime Request Details</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong><i class="fas fa-user me-1 text-primary"></i> Employee:</strong> {{ record.employee.full_name }} ({{ record.employee.employee_id }})</p>
+                            <p class="mb-2"><strong><i class="fas fa-calendar me-1 text-primary"></i> Date:</strong> {{ record.date|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong><i class="fas fa-clock me-1 text-primary"></i> Hours:</strong> {{ record.hours }}h</p>
+                            <p class="mb-2"><strong><i class="fas fa-money-bill me-1 text-primary"></i> Amount:</strong> Rs. {{ record.amount|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                    <p class="mb-2"><strong><i class="fas fa-info-circle me-1 text-primary"></i> Rate:</strong> {{ record.rate_multiplier }}x</p>
+                    <p class="mb-2"><strong><i class="fas fa-info-circle me-1 text-primary"></i> Status:</strong>
+                        {% if record.status == 'approved' %}
+                        <span class="badge bg-success">Approved</span>
+                        {% elif record.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif record.status == 'rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-0"><strong><i class="fas fa-user-tie me-1 text-primary"></i> Reviewed By:</strong> {{ record.approved_by.full_name|default:"-" }}</p>
+                </div>
+
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-primary"><i class="fas fa-comment me-1"></i> Reason</h6>
+                        <p class="mb-0 text-muted">{{ record.reason }}</p>
+                    </div>
+                </div>
+
+                {% if record.status == 'pending' %}
+                <hr>
+                <h6 class="fw-bold text-primary mb-3"><i class="fas fa-gavel me-1"></i> Decision</h6>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-3">
+                        <a href="{% url 'overtime_list' %}" class="btn btn-secondary flex-fill"><i class="fas fa-arrow-left me-1"></i> Cancel</a>
+                        <button type="submit" name="action" value="rejected" class="btn btn-danger flex-fill"><i class="fas fa-times me-1"></i> Reject</button>
+                        <button type="submit" name="action" value="approved" class="btn btn-success flex-fill"><i class="fas fa-check me-1"></i> Approve</button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'overtime_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back to List</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

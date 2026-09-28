@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Documents{% endblock %}
+{% block page_title %}<i class="fas fa-folder-open me-2"></i>Employee Documents{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <div>
+        <a href="{% url 'document_list' %}" class="btn btn-{% if not request.GET.employee %}primary{% else %}outline-primary{% endif %} btn-sm">All</a>
+    </div>
+    <div>
+        <a href="{% url 'document_upload' %}" class="btn btn-primary"><i class="fas fa-upload me-1"></i> Upload Document</a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-filter me-1"></i> Filter</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small">Employee ID</label>
+                <input type="text" name="employee" class="form-control" placeholder="e.g. EMP001" value="{{ request.GET.employee|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Filter</button>
+            </div>
+            <div class="col-md-1">
+                <a href="{% url 'document_list' %}" class="btn btn-outline-secondary w-100"><i class="fas fa-times"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-alt me-1"></i> Documents</h6>
+        <span class="badge bg-primary fs-6">{{ documents|length }} Document{{ documents|length|pluralize }}</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Type</th>
+                        <th>Title</th>
+                        <th>File Name</th>
+                        <th>Size</th>
+                        <th>Uploaded</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;background:#eaf2f8;color:#2980b9;font-weight:600;font-size:0.65rem;flex-shrink:0;">
+                                    {{ doc.employee.first_name|first|upper }}{{ doc.employee.last_name|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold" style="font-size:0.85rem;">{{ doc.employee.full_name }}</div>
+                                    <div class="text-muted" style="font-size:0.7rem;">{{ doc.employee.employee_id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if doc.doc_type == 'cnic' %}
+                            <span class="badge bg-info">CNIC</span>
+                            {% elif doc.doc_type == 'degree' %}
+                            <span class="badge bg-primary">Degree</span>
+                            {% elif doc.doc_type == 'experience' %}
+                            <span class="badge bg-success">Experience</span>
+                            {% elif doc.doc_type == 'contract' %}
+                            <span class="badge bg-warning text-dark">Contract</span>
+                            {% elif doc.doc_type == 'offer' %}
+                            <span class="badge bg-secondary">Offer Letter</span>
+                            {% elif doc.doc_type == 'noc' %}
+                            <span class="badge bg-danger">NOC</span>
+                            {% else %}
+                            <span class="badge bg-dark">Other</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ doc.title }}</td>
+                        <td><small class="text-muted">{{ doc.file_name }}</small></td>
+                        <td><small class="text-muted">{% widthratio doc.file_size 1024 1 %} KB</small></td>
+                        <td><small class="text-muted">{{ doc.uploaded_at|date:"M d, Y" }}</small></td>
+                        <td>
+                            <a href="{% url 'document_download' doc.pk %}" class="btn btn-sm btn-outline-success" title="Download">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <a href="{% url 'document_delete' doc.pk %}" class="btn btn-sm btn-outline-danger" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">
+                        <i class="fas fa-folder-open fa-2x mb-2 d-block"></i> No documents found.
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Training Detail{% endblock %}
+{% block page_title %}<i class="fas fa-graduation-cap me-2"></i>Training: {{ training.title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-info-circle me-1"></i> Training Details</h6>
+                {% if training.status == 'completed' %}
+                <span class="badge bg-success fs-6">Completed</span>
+                {% elif training.status == 'ongoing' %}
+                <span class="badge bg-info fs-6">Ongoing</span>
+                {% elif training.status == 'planned' %}
+                <span class="badge bg-warning text-dark fs-6">Planned</span>
+                {% else %}
+                <span class="badge bg-danger fs-6">Cancelled</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong><i class="fas fa-heading me-1 text-primary"></i> Title:</strong> {{ training.title }}</p>
+                        <p class="mb-2"><strong><i class="fas fa-building me-1 text-primary"></i> Provider:</strong> {{ training.provider|default:"-" }}</p>
+                        <p class="mb-2"><strong><i class="fas fa-user me-1 text-primary"></i> Created By:</strong> {{ training.created_by.full_name|default:"-" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong><i class="fas fa-calendar-start me-1 text-primary"></i> Start Date:</strong> {{ training.start_date|date:"M d, Y" }}</p>
+                        <p class="mb-2"><strong><i class="fas fa-calendar-end me-1 text-primary"></i> End Date:</strong> {{ training.end_date|date:"M d, Y"|default:"-" }}</p>
+                        <p class="mb-2"><strong><i class="fas fa-users me-1 text-primary"></i> Enrolled:</strong> {{ enrollments.count }} employee{{ enrollments.count|pluralize }}</p>
+                    </div>
+                </div>
+                {% if training.description %}
+                <hr>
+                <p class="text-muted mb-0">{{ training.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-users me-1"></i> Enrolled Employees</h6>
+                <a href="{% url 'training_enroll' training.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-user-plus me-1"></i> Add More</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Employee</th>
+                                <th>Status</th>
+                                <th>Enrolled</th>
+                                <th>Completion</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enroll in enrollments %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;background:#eaf2f8;color:#2980b9;font-weight:600;font-size:0.65rem;flex-shrink:0;">
+                                            {{ enroll.employee.first_name|first|upper }}{{ enroll.employee.last_name|first|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold" style="font-size:0.85rem;">{{ enroll.employee.full_name }}</div>
+                                            <div class="text-muted" style="font-size:0.7rem;">{{ enroll.employee.employee_id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if enroll.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif enroll.status == 'in_progress' %}
+                                    <span class="badge bg-info">In Progress</span>
+                                    {% elif enroll.status == 'enrolled' %}
+                                    <span class="badge bg-primary">Enrolled</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Dropped</span>
+                                    {% endif %}
+                                </td>
+                                <td><small>{{ enroll.enrolled_at|date:"M d, Y" }}</small></td>
+                                <td><small>{{ enroll.completion_date|date:"M d, Y"|default:"-" }}</small></td>
+                                <td><small>{{ enroll.score|default:"-" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center py-3 text-muted">No employees enrolled yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-cog me-1"></i> Actions</h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'training_enroll' training.pk %}" class="btn btn-primary w-100 mb-2"><i class="fas fa-user-plus me-1"></i> Enroll Employees</a>
+                <a href="{% url 'training_list' %}" class="btn btn-secondary w-100"><i class="fas fa-arrow-left me-1"></i> Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

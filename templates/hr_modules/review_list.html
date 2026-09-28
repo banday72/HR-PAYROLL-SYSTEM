@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Performance Reviews{% endblock %}
+{% block page_title %}<i class="fas fa-star me-2"></i>Performance Reviews{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <div></div>
+    <div>
+        <a href="{% url 'review_create' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> New Review</a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-list me-1"></i> Reviews</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Employee</th>
+                        <th>Reviewer</th>
+                        <th>Period</th>
+                        <th>Year</th>
+                        <th>Rating</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;background:#eaf2f8;color:#2980b9;font-weight:600;font-size:0.65rem;flex-shrink:0;">
+                                    {{ review.employee.first_name|first|upper }}{{ review.employee.last_name|first|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold" style="font-size:0.85rem;">{{ review.employee.full_name }}</div>
+                                    <div class="text-muted" style="font-size:0.7rem;">{{ review.employee.employee_id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ review.reviewer.full_name|default:"-" }}</td>
+                        <td><span class="badge bg-primary">{{ review.get_period_display }}</span></td>
+                        <td>{{ review.year }}</td>
+                        <td>
+                            {% if review.overall_rating >= 4.5 %}
+                            <span class="badge bg-success fs-6">{{ review.overall_rating|floatformat:1 }}/5</span>
+                            {% elif review.overall_rating >= 3.5 %}
+                            <span class="badge bg-info fs-6">{{ review.overall_rating|floatformat:1 }}/5</span>
+                            {% elif review.overall_rating >= 2.5 %}
+                            <span class="badge bg-warning text-dark fs-6">{{ review.overall_rating|floatformat:1 }}/5</span>
+                            {% else %}
+                            <span class="badge bg-danger fs-6">{{ review.overall_rating|floatformat:1 }}/5</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if review.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Draft</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'review_detail' review.pk %}" class="btn btn-sm btn-outline-info" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-muted">
+                        <i class="fas fa-star fa-2x mb-2 d-block"></i> No reviews found.
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -263,6 +263,33 @@
 </div>
 
 <div class="row">
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-chart-pie me-1"></i> Dept Distribution</h6>
+            </div>
+            <div class="card-body"><canvas id="deptChart" height="220"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-chart-bar me-1"></i> Attendance</h6>
+            </div>
+            <div class="card-body"><canvas id="attendanceChart" height="220"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-warning"><i class="fas fa-chart-line me-1"></i> Salary by Dept</h6>
+            </div>
+            <div class="card-body"><canvas id="salaryChart" height="220"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
     <div class="col-lg-8">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
@@ -385,5 +412,36 @@
         localStorage.setItem(STORAGE_KEY, Date.now().toString());
     });
 })();
+
+{% if not is_employee %}
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/dashboard-stats/').then(r => r.json()).then(data => {
+        if (data.dept_labels) {
+            new Chart(document.getElementById('deptChart'), {
+                type: 'doughnut', data: {
+                    labels: data.dept_labels,
+                    datasets: [{ data: data.dept_counts, backgroundColor: ['#1a5276','#2980b9','#5dade2','#3498db','#1cc88a','#f6c23e','#e74a3b','#9b59b6'] }]
+                }, options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } }
+            });
+        }
+        if (data.attendance_labels) {
+            new Chart(document.getElementById('attendanceChart'), {
+                type: 'bar', data: {
+                    labels: data.attendance_labels,
+                    datasets: [{ label: 'Employees', data: data.attendance_counts, backgroundColor: ['#1cc88a','#e74a3b','#f6c23e','#36b9cc','#9b59b6'] }]
+                }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+        if (data.salary_labels) {
+            new Chart(document.getElementById('salaryChart'), {
+                type: 'line', data: {
+                    labels: data.salary_labels,
+                    datasets: [{ label: 'Avg Salary', data: data.salary_totals, borderColor: '#f6c23e', backgroundColor: 'rgba(246,194,62,0.1)', fill: true, tension: 0.3 }]
+                }, options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+    }).catch(function(){});
+});
+{% endif %}
 </script>
 {% endblock %}
