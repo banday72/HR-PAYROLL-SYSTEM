@@ -1,79 +1,130 @@
 {% extends "base.html" %}
 {% block title %}Performance Reviews{% endblock %}
-{% block page_title %}<i class="fas fa-star me-2"></i>Performance Reviews{% endblock %}
+{% block page_title %}<i class="fas fa-star me-1" style="color:#f39c12;"></i> Performance Reviews{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between mb-3">
-    <div></div>
-    <div>
-        <a href="{% url 'review_create' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i> New Review</a>
+<div class="row mb-3">
+    <div class="col-md-3">
+        <div class="card stat-card border-warning shadow h-100"><div class="card-body py-2 text-center">
+            <div style="font-size:0.7rem;color:#f39c12;font-weight:700;">AVG RATING</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#1a5276;">{{ avg_rating }}/5</div>
+        </div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-primary shadow h-100"><div class="card-body py-2 text-center">
+            <div style="font-size:0.7rem;color:#2980b9;font-weight:700;">TOTAL REVIEWS</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#1a5276;">{{ total_reviews }}</div>
+        </div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-success shadow h-100"><div class="card-body py-2 text-center">
+            <div style="font-size:0.7rem;color:#1cc88a;font-weight:700;">COMPLETED</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#1a5276;">{{ completed }}</div>
+        </div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-info shadow h-100"><div class="card-body py-2 text-center">
+            <a href="{% url 'review_create' %}" class="btn btn-primary btn-sm w-100" style="border-radius:15px;"><i class="fas fa-plus me-1"></i> New Review</a>
+        </div></div>
     </div>
 </div>
 
-<div class="card shadow">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-list me-1"></i> Reviews</h6>
+<!-- Filters -->
+<div class="card shadow mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-bold" style="font-size:0.75rem;">Period</label>
+                <select name="period" class="form-select form-select-sm">
+                    <option value="">All Periods</option>
+                    <option value="Q1" {% if period_filter == 'Q1' %}selected{% endif %}>Q1 (Jan-Mar)</option>
+                    <option value="Q2" {% if period_filter == 'Q2' %}selected{% endif %}>Q2 (Apr-Jun)</option>
+                    <option value="Q3" {% if period_filter == 'Q3' %}selected{% endif %}>Q3 (Jul-Sep)</option>
+                    <option value="Q4" {% if period_filter == 'Q4' %}selected{% endif %}>Q4 (Oct-Dec)</option>
+                    <option value="annual" {% if period_filter == 'annual' %}selected{% endif %}>Annual</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold" style="font-size:0.75rem;">Year</label>
+                <select name="year" class="form-select form-select-sm">
+                    <option value="">All Years</option>
+                    <option value="2026" {% if year_filter == '2026' %}selected{% endif %}>2026</option>
+                    <option value="2025" {% if year_filter == '2025' %}selected{% endif %}>2025</option>
+                    <option value="2024" {% if year_filter == '2024' %}selected{% endif %}>2024</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold" style="font-size:0.75rem;">Employee</label>
+                <select name="employee" class="form-select form-select-sm">
+                    <option value="">All Employees</option>
+                    {% for es in emp_stats %}<option value="{{ es.employee.employee_id }}" {% if employee_filter == es.employee.employee_id %}selected{% endif %}>{{ es.employee.first_name }} {{ es.employee.last_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2"><button class="btn btn-primary btn-sm w-100" style="border-radius:15px;"><i class="fas fa-filter me-1"></i> Filter</button></div>
+            <div class="col-md-2"><a href="{% url 'review_list' %}" class="btn btn-outline-secondary btn-sm w-100" style="border-radius:15px;">Clear</a></div>
+        </form>
     </div>
+</div>
+
+<!-- Employee Progress Cards -->
+{% if emp_stats %}
+<div class="card shadow mb-4">
+    <div class="card-header py-2"><h6 class="m-0 fw-bold text-primary" style="font-size:0.85rem;"><i class="fas fa-chart-bar me-1"></i> Employee Progress</h6></div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>Employee</th>
-                        <th>Reviewer</th>
-                        <th>Period</th>
-                        <th>Year</th>
-                        <th>Rating</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+            <table class="table table-bordered mb-0">
+                <thead><tr><th>Employee</th><th>Department</th><th>Designation</th><th>Avg Rating</th><th>Reviews</th><th>Progress</th></tr></thead>
                 <tbody>
-                    {% for review in reviews %}
+                    {% for es in emp_stats %}
                     <tr>
+                        <td class="fw-bold">{{ es.employee.first_name }} {{ es.employee.last_name }} <small class="text-muted">({{ es.employee.employee_id }})</small></td>
+                        <td>{{ es.employee.department|default:"-" }}</td>
+                        <td>{{ es.employee.designation|default:"-" }}</td>
                         <td>
-                            <div class="d-flex align-items-center">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px;height:32px;background:#eaf2f8;color:#2980b9;font-weight:600;font-size:0.65rem;flex-shrink:0;">
-                                    {{ review.employee.first_name|first|upper }}{{ review.employee.last_name|first|upper }}
-                                </div>
-                                <div>
-                                    <div class="fw-bold" style="font-size:0.85rem;">{{ review.employee.full_name }}</div>
-                                    <div class="text-muted" style="font-size:0.7rem;">{{ review.employee.employee_id }}</div>
-                                </div>
+                            {% if es.avg_rating >= 4 %}<span class="badge bg-success">{{ es.avg_rating }}/5</span>
+                            {% elif es.avg_rating >= 3 %}<span class="badge bg-info">{{ es.avg_rating }}/5</span>
+                            {% elif es.avg_rating >= 2 %}<span class="badge bg-warning">{{ es.avg_rating }}/5</span>
+                            {% else %}<span class="badge bg-danger">{{ es.avg_rating }}/5</span>{% endif %}
+                        </td>
+                        <td>{{ es.review_count }}</td>
+                        <td>
+                            <div class="progress" style="height:8px;border-radius:4px;">
+                                <div class="progress-bar bg-{% if es.avg_rating >= 4 %}success{% elif es.avg_rating >= 3 %}info{% elif es.avg_rating >= 2 %}warning{% else %}danger{% endif %}" style="width:{{ es.avg_rating|floatformat:0 }}0%;border-radius:4px;"></div>
                             </div>
                         </td>
-                        <td>{{ review.reviewer.full_name|default:"-" }}</td>
-                        <td><span class="badge bg-primary">{{ review.get_period_display }}</span></td>
-                        <td>{{ review.year }}</td>
-                        <td>
-                            {% if review.overall_rating >= 4.5 %}
-                            <span class="badge bg-success fs-6">{{ review.overall_rating|floatformat:1 }}/5</span>
-                            {% elif review.overall_rating >= 3.5 %}
-                            <span class="badge bg-info fs-6">{{ review.overall_rating|floatformat:1 }}/5</span>
-                            {% elif review.overall_rating >= 2.5 %}
-                            <span class="badge bg-warning text-dark fs-6">{{ review.overall_rating|floatformat:1 }}/5</span>
-                            {% else %}
-                            <span class="badge bg-danger fs-6">{{ review.overall_rating|floatformat:1 }}/5</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if review.status == 'completed' %}
-                            <span class="badge bg-success">Completed</span>
-                            {% else %}
-                            <span class="badge bg-secondary">Draft</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'review_detail' review.pk %}" class="btn btn-sm btn-outline-info" title="View">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                        </td>
                     </tr>
-                    {% empty %}
-                    <tr><td colspan="7" class="text-center py-4 text-muted">
-                        <i class="fas fa-star fa-2x mb-2 d-block"></i> No reviews found.
-                    </td></tr>
                     {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Reviews Table -->
+<div class="card shadow">
+    <div class="card-header py-2"><h6 class="m-0 fw-bold text-primary" style="font-size:0.85rem;"><i class="fas fa-list me-1"></i> All Reviews</h6></div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered mb-0">
+                <thead><tr><th>Employee</th><th>Reviewer</th><th>Period</th><th>Year</th><th>Technical</th><th>Communication</th><th>Teamwork</th><th>Leadership</th><th>Initiative</th><th>Overall</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                    {% for r in reviews %}
+                    <tr>
+                        <td class="fw-bold">{{ r.employee.first_name }} {{ r.employee.last_name }}</td>
+                        <td>{% if r.reviewer %}{{ r.reviewer.first_name }} {{ r.reviewer.last_name }}{% else %}-{% endif %}</td>
+                        <td><span class="badge bg-primary">{{ r.get_period_display }}</span></td>
+                        <td>{{ r.year }}</td>
+                        <td>{% if r.technical_score >= 4 %}<span class="text-success fw-bold">{% elif r.technical_score >= 3 %}<span class="text-info fw-bold">{% else %}<span class="text-warning fw-bold">{% endif %}{{ r.technical_score }}/5</span></td>
+                        <td>{% if r.communication_score >= 4 %}<span class="text-success fw-bold">{% elif r.communication_score >= 3 %}<span class="text-info fw-bold">{% else %}<span class="text-warning fw-bold">{% endif %}{{ r.communication_score }}/5</span></td>
+                        <td>{% if r.teamwork_score >= 4 %}<span class="text-success fw-bold">{% elif r.teamwork_score >= 3 %}<span class="text-info fw-bold">{% else %}<span class="text-warning fw-bold">{% endif %}{{ r.teamwork_score }}/5</span></td>
+                        <td>{% if r.leadership_score >= 4 %}<span class="text-success fw-bold">{% elif r.leadership_score >= 3 %}<span class="text-info fw-bold">{% else %}<span class="text-warning fw-bold">{% endif %}{{ r.leadership_score }}/5</span></td>
+                        <td>{% if r.initiative_score >= 4 %}<span class="text-success fw-bold">{% elif r.initiative_score >= 3 %}<span class="text-info fw-bold">{% else %}<span class="text-warning fw-bold">{% endif %}{{ r.initiative_score }}/5</span></td>
+                        <td><span class="badge bg-{% if r.overall_rating >= 4 %}success{% elif r.overall_rating >= 3 %}info{% elif r.overall_rating >= 2 %}warning{% else %}danger{% endif %}" style="font-size:0.8rem;">{{ r.overall_rating }}/5</span></td>
+                        <td><span class="badge bg-{% if r.status == 'completed' %}success{% else %}secondary{% endif %}">{{ r.get_status_display }}</span></td>
+                        <td><a href="{% url 'review_detail' r.pk %}" class="btn btn-sm btn-outline-info" style="border-radius:15px;"><i class="fas fa-eye"></i></a></td>
+                    </tr>
+                    {% empty %}<tr><td colspan="12" class="text-center text-muted">No reviews found.</td></tr>{% endfor %}
                 </tbody>
             </table>
         </div>

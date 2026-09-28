@@ -137,13 +137,45 @@ def document_delete(request, pk):
 @login_required
 def review_list(request):
     emp = Employee.objects.filter(user=request.user).first()
+    period_filter = request.GET.get('period', '')
+    year_filter = request.GET.get('year', '')
+    employee_filter = request.GET.get('employee', '')
+
     if request.user.is_superuser or (emp and emp.is_hr):
         reviews = PerformanceReview.objects.all()
     elif emp:
         reviews = PerformanceReview.objects.filter(employee=emp)
     else:
         reviews = PerformanceReview.objects.none()
-    return render(request, 'hr_modules/review_list.html', {'reviews': reviews})
+
+    if period_filter:
+        reviews = reviews.filter(period=period_filter)
+    if year_filter:
+        reviews = reviews.filter(year=int(year_filter))
+    if employee_filter:
+        reviews = reviews.filter(employee__employee_id=employee_filter)
+
+    avg_rating = reviews.aggregate(avg=Avg('overall_rating'))['avg'] or 0
+    total_reviews = reviews.count()
+    completed = reviews.filter(status='completed').count()
+
+    from django.db.models import Avg
+    emp_stats = []
+    if request.user.is_superuser or (emp and emp.is_hr):
+        from django.db.models import Count
+        all_emps = Employee.objects.filter(status='active')
+        for e in all_emps:
+            e_reviews = PerformanceReview.objects.filter(employee=e)
+            e_avg = e_reviews.aggregate(avg=Avg('overall_rating'))['avg'] or 0
+            e_count = e_reviews.count()
+            emp_stats.append({'employee': e, 'avg_rating': e_avg, 'review_count': e_count})
+
+    return render(request, 'hr_modules/review_list.html', {
+        'reviews': reviews, 'avg_rating': round(avg_rating, 2),
+        'total_reviews': total_reviews, 'completed': completed,
+        'emp_stats': emp_stats, 'period_filter': period_filter,
+        'year_filter': year_filter, 'employee_filter': employee_filter,
+    })
 
 
 @login_required
