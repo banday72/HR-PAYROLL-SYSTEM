@@ -5,7 +5,6 @@ from django.http import JsonResponse
 from django.utils import timezone
 from datetime import date, timedelta
 from employees.models import Employee
-from employees.decorators import hr_required
 from .models import (
     Notification, EmployeeDocument, PerformanceReview,
     Training, TrainingEnrollment, TravelRequest, OvertimeRecord
