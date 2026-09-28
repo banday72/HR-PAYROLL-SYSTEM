@@ -4,186 +4,116 @@
 
 {% block extra_css %}
 <style>
-    .org-tree { padding: 1rem 0; }
-    .org-level { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 0; position: relative; }
-    .org-connector { display: flex; justify-content: center; margin-bottom: 0; }
-    .org-connector .v-line { width: 3px; height: 30px; background: #2980b9; }
-    .org-connector .h-line { height: 3px; background: #2980b9; align-self: center; }
-    .org-branch { display: flex; justify-content: center; position: relative; margin-bottom: 0; }
-    .org-branch::before { content: ''; position: absolute; top: 0; left: 25%; right: 25%; height: 3px; background: #2980b9; }
-    .org-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.08); transition: transform .2s, box-shadow .2s; width: 220px; text-align: center; position: relative; overflow: visible; }
-    .org-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,.15); }
-    .org-card .card-body { padding: 1rem; }
-    .org-card .emp-avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; color: #fff; margin: 0 auto .5rem; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
-    .org-card .emp-name { font-weight: 700; color: #1a5276; font-size: 0.9rem; margin-bottom: 2px; }
-    .org-card .emp-designation { font-size: 0.75rem; color: #6c757d; }
-    .org-card .emp-id { font-size: 0.65rem; color: #adb5bd; }
-    .org-card.ceo-card { border-top: 4px solid #e74a3b; }
-    .org-card.ceo-card .emp-avatar { width: 70px; height: 70px; font-size: 1.4rem; border-color: #e74a3b; }
-    .org-card.officer-card { border-top: 4px solid #2980b9; }
-    .org-card.employee-card { border-top: 4px solid #1cc88a; }
-    .tree-connector { position: relative; }
-    .tree-connector::before { content: ''; position: absolute; top: -15px; left: 50%; width: 3px; height: 15px; background: #2980b9; transform: translateX(-50%); }
-    .sub-branch { position: relative; padding-top: 15px; }
-    .sub-branch::before { content: ''; position: absolute; top: 0; left: 50%; width: 3px; height: 15px; background: #2980b9; transform: translateX(-50%); }
-    .sub-branch .branch-line { position: absolute; top: 0; height: 3px; background: #2980b9; }
-    .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1rem; color: #2980b9; background: #eaf2f8; padding: 4px 16px; border-radius: 20px; display: inline-block; margin-bottom: 1rem; }
+    .org-card { border:none; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,.08); transition:transform .2s; width:200px; text-align:center; margin:0 auto; }
+    .org-card:hover { transform:translateY(-3px); box-shadow:0 8px 25px rgba(0,0,0,.15); }
+    .emp-avatar { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.1rem; color:#fff; margin:0 auto .5rem; border:3px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.15); }
+    .emp-name { font-weight:700; color:#1a5276; font-size:0.85rem; }
+    .emp-desig { font-size:0.72rem; color:#6c757d; }
+    .emp-id { font-size:0.65rem; color:#adb5bd; }
+    .ceo-card { border-top:4px solid #e74a3b; }
+    .ceo-card .emp-avatar { width:70px; height:70px; font-size:1.3rem; border-color:#e74a3b; }
+    .officer-card { border-top:4px solid #2980b9; }
+    .v-line { width:3px; height:28px; background:#2980b9; margin:0 auto; }
+    .section-label { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1rem; color:#2980b9; background:#eaf2f8; padding:4px 16px; border-radius:20px; display:inline-block; }
+    .sub-list { border-left:3px solid #2980b9; padding-left:12px; }
+    .sub-item { display:flex; align-items:center; padding:8px 0; }
+    .sub-item + .sub-item { border-top:1px solid #f0f0f0; }
+    .sub-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:0.6rem; color:#fff; flex-shrink:0; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-sitemap me-1"></i> Organization Structure</h6>
-        <span class="badge bg-primary fs-6">{{ officers|length }} Officer{{ officers|length|pluralize }}</span>
-    </div>
-    <div class="card-body">
-        <div class="org-tree">
-            {% if ceo %}
-            <div class="text-center mb-2">
-                <span class="section-label"><i class="fas fa-crown me-1"></i> Chief Executive Officer</span>
-            </div>
-            <div class="org-level mb-3">
-                <div class="org-card ceo-card tree-connector">
-                    <div class="card-body">
-                        <div class="emp-avatar" style="background: linear-gradient(135deg, #e74a3b, #c0392b);">
-                            {% if ceo.profile_picture_b64 %}
-                            <img src="{{ ceo.profile_picture_b64 }}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="">
-                            {% else %}
-                            {{ ceo.first_name|first|upper }}{{ ceo.last_name|first|upper }}
-                            {% endif %}
-                        </div>
-                        <div class="emp-name">{{ ceo.full_name }}</div>
-                        <div class="emp-designation">{{ ceo.designation|default:"CEO" }}</div>
-                        <div class="emp-id">{{ ceo.employee_id }}</div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="org-connector">
-                <div class="v-line"></div>
+{% if ceo %}
+<div class="text-center mb-3">
+    <span class="section-label"><i class="fas fa-crown me-1" style="color:#e74a3b;"></i> Chief Executive Officer</span>
+</div>
+<div class="d-flex justify-content-center mb-2">
+    <div class="org-card ceo-card">
+        <div class="card-body py-3">
+            <div class="emp-avatar" style="background:linear-gradient(135deg,#e74a3b,#c0392b);">
+                {% if ceo.profile_picture_b64 %}<img src="{{ ceo.profile_picture_b64 }}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">{% else %}{{ ceo.first_name|first|upper }}{{ ceo.last_name|first|upper }}{% endif %}
             </div>
-
-            {% if officers %}
-            <div class="text-center mb-2">
-                <span class="section-label"><i class="fas fa-user-tie me-1"></i> Officers</span>
-            </div>
-            <div class="org-level mb-3">
-                {% for officer in officers %}
-                <div class="org-card officer-card tree-connector">
-                    <div class="card-body">
-                        <div class="emp-avatar" style="background: linear-gradient(135deg, #2980b9, #1a5276);">
-                            {% if officer.profile_picture_b64 %}
-                            <img src="{{ officer.profile_picture_b64 }}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="">
-                            {% else %}
-                            {{ officer.first_name|first|upper }}{{ officer.last_name|first|upper }}
-                            {% endif %}
-                        </div>
-                        <div class="emp-name">{{ officer.full_name }}</div>
-                        <div class="emp-designation">{{ officer.designation|default:officer.role|title }}</div>
-                        <div class="emp-id">{{ officer.employee_id }}</div>
-                        {% with subordinates=employees_map|default_if_none:"" %}
-                        {% endwith %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-            {% with officer_emps=employees_map %}
-            {% for officer in officers %}
-                {% with subs=officer_emps|default_if_none:"" %}
-                {% endwith %}
-            {% endfor %}
-            {% endwith %}
-            {% endif %}
-            {% endif %}
+            <div class="emp-name">{{ ceo.first_name }} {{ ceo.last_name }}</div>
+            <div class="emp-desig">{{ ceo.designation }}</div>
+            <div class="emp-id">{{ ceo.employee_id }}</div>
         </div>
-
-        {% if officers %}
-        <div class="mt-4">
-            <span class="section-label"><i class="fas fa-users me-1"></i> Employee Hierarchy by Officer</span>
-        </div>
-        <div class="row mt-3">
-            {% for officer in officers %}
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card border-0 shadow-sm" style="border-top: 3px solid #2980b9;">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:40px;height:40px;background:linear-gradient(135deg,#2980b9,#1a5276);color:#fff;font-weight:700;font-size:0.8rem;">
-                                {{ officer.first_name|first|upper }}{{ officer.last_name|first|upper }}
-                            </div>
-                            <div>
-                                <div class="fw-bold text-primary" style="font-size:0.9rem;">{{ officer.full_name }}</div>
-                                <div class="text-muted" style="font-size:0.75rem;">{{ officer.designation|default:officer.role|title }}</div>
-                            </div>
-                        </div>
-                        <div class="list-group list-group-flush">
-                            {% for emp in employees_map|default_if_none:"" %}
-                            {% empty %}
-                            {% endfor %}
-                        </div>
-                        {% with officer_id=officer.employee_id %}
-                        {% for emp_id, emp_list in employees_map.items %}
-                            {% if forloop.parentloop.parentloop.counter == forloop.counter %}
-                            {% endif %}
-                        {% endfor %}
-                        {% endwith %}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <div class="row mt-2">
-            {% for officer in officers %}
-            <div class="col-12 mb-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header py-2" style="background: linear-gradient(135deg, #2980b9, #1a5276); color: #fff;">
-                        <h6 class="m-0" style="font-size:0.85rem;">
-                            <i class="fas fa-user-tie me-1"></i> {{ officer.full_name }} - {{ officer.designation|default:officer.role|title }}
-                        </h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th style="font-size:0.8rem;">Employee</th>
-                                        <th style="font-size:0.8rem;">Designation</th>
-                                        <th style="font-size:0.8rem;">Department</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for sub_id, sub_list in employees_map.items %}
-                                        {% if sub_id == officer.pk %}
-                                        {% for sub in sub_list %}
-                                        <tr>
-                                            <td style="font-size:0.8rem;">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:30px;height:30px;background:#eaf2f8;color:#2980b9;font-weight:600;font-size:0.6rem;flex-shrink:0;">
-                                                        {{ sub.first_name|first|upper }}{{ sub.last_name|first|upper }}
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-bold">{{ sub.full_name }}</div>
-                                                        <div class="text-muted" style="font-size:0.7rem;">{{ sub.employee_id }}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td style="font-size:0.8rem;">{{ sub.designation|default:"-" }}</td>
-                                            <td style="font-size:0.8rem;">{{ sub.department|default:"-" }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                        {% endif %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
     </div>
 </div>
+<div class="v-line mb-3"></div>
+{% endif %}
+
+{% if org_data %}
+<div class="text-center mb-3">
+    <span class="section-label"><i class="fas fa-user-tie me-1"></i> Officers (C-Level)</span>
+</div>
+<div class="d-flex flex-wrap justify-content-center gap-4 mb-4">
+    {% for item in org_data %}
+    <div class="org-card officer-card">
+        <div class="card-body py-3">
+            <div class="emp-avatar" style="background:linear-gradient(135deg,#2980b9,#1a5276);">
+                {% if item.officer.profile_picture_b64 %}<img src="{{ item.officer.profile_picture_b64 }}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">{% else %}{{ item.officer.first_name|first|upper }}{{ item.officer.last_name|first|upper }}{% endif %}
+            </div>
+            <div class="emp-name">{{ item.officer.first_name }} {{ item.officer.last_name }}</div>
+            <div class="emp-desig">{{ item.officer.designation }}</div>
+            <div class="emp-id">{{ item.officer.employee_id }}</div>
+            <div class="mt-1"><small class="text-muted">Reports to: CEO</small></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="text-center mb-3">
+    <span class="section-label"><i class="fas fa-users me-1"></i> Team Members by Officer</span>
+</div>
+<div class="row">
+    {% for item in org_data %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card shadow-sm h-100" style="border-top:3px solid #2980b9;">
+            <div class="card-header py-2" style="background:linear-gradient(135deg,#2980b9,#1a5276);color:#fff;">
+                <h6 class="m-0" style="font-size:0.85rem;">
+                    <i class="fas fa-user-tie me-1"></i> {{ item.officer.first_name }} {{ item.officer.last_name }}
+                    <br><small style="font-size:0.7rem;">{{ item.officer.designation }}</small>
+                </h6>
+            </div>
+            <div class="card-body p-2">
+                {% if item.employees %}
+                <div class="sub-list">
+                    {% for sub in item.employees %}
+                    <div class="sub-item">
+                        <div class="sub-avatar me-2" style="background:linear-gradient(135deg,#1cc88a,#13855c);">
+                            {{ sub.first_name|first|upper }}{{ sub.last_name|first|upper }}
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.8rem;">{{ sub.first_name }} {{ sub.last_name }}</div>
+                            <div class="text-muted" style="font-size:0.7rem;">
+                                {{ sub.designation|default:"-" }} &middot; {{ sub.employee_id }}
+                            </div>
+                            <div class="text-muted" style="font-size:0.65rem;">
+                                <i class="fas fa-arrow-up me-1" style="color:#2980b9;"></i>Reports to: <strong>{{ item.officer.first_name }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-user-slash mb-1"></i><br>
+                    <small>No team members</small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent text-center py-2">
+                <small class="text-muted"><i class="fas fa-users me-1"></i> {{ item.employees|length }} member{{ item.employees|length|pluralize }}</small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-sitemap fa-3x text-muted mb-3"></i>
+    <p class="text-muted">No officers found in the organization.</p>
+</div>
+{% endif %}
 {% endblock %}

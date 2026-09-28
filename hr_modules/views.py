@@ -20,12 +20,12 @@ def org_chart(request):
     from employees.models import Employee
     ceo = Employee.objects.filter(employee_id='CEO001').first()
     officers = Employee.objects.filter(reports_to=ceo, status='active') if ceo else []
-    employees_map = {}
-    for emp in Employee.objects.filter(status='active').select_related('reports_to'):
-        if emp.reports_to_id:
-            employees_map.setdefault(emp.reports_to_id, []).append(emp)
+    org_data = []
+    for officer in officers:
+        subs = Employee.objects.filter(reports_to=officer, status='active')
+        org_data.append({'officer': officer, 'employees': list(subs)})
     return render(request, 'hr_modules/org_chart.html', {
-        'ceo': ceo, 'officers': officers, 'employees_map': employees_map
+        'ceo': ceo, 'org_data': org_data
     })
 
 
@@ -298,7 +298,10 @@ def travel_list(request):
         travels = TravelRequest.objects.filter(employee=emp)
     else:
         travels = TravelRequest.objects.none()
-    return render(request, 'hr_modules/travel_list.html', {'travels': travels})
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        travels = travels.filter(status=status_filter)
+    return render(request, 'hr_modules/travel_list.html', {'travels': travels, 'status_filter': status_filter})
 
 
 @login_required
@@ -360,7 +363,10 @@ def overtime_list(request):
         records = OvertimeRecord.objects.filter(employee=emp)
     else:
         records = OvertimeRecord.objects.none()
-    return render(request, 'hr_modules/overtime_list.html', {'records': records})
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        records = records.filter(status=status_filter)
+    return render(request, 'hr_modules/overtime_list.html', {'records': records, 'status_filter': status_filter})
 
 
 @login_required
