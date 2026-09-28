@@ -35,7 +35,7 @@ try:
         d, _ = Department.objects.get_or_create(name=name, defaults={'description': desc})
         depts[name] = d
 
-    def get_or_create_emp(emp_id, first, last, email, dept_name, designation, salary, role='employee', reports_to=None, password='employee123'):
+    def get_or_create_emp(emp_id, first, last, email, dept_name, designation, salary, role='employee', reports_to=None, password='employee123', emp_type='EMP'):
         if Employee.objects.filter(employee_id=emp_id).exists():
             return Employee.objects.get(employee_id=emp_id)
         user, _ = User.objects.get_or_create(username=emp_id,
@@ -57,41 +57,50 @@ try:
     ceo = get_or_create_emp('CEO001', 'Ahmed', 'Banday', 'ahmed.banday@company.com',
         'Operations', 'CEO', 500000, role='manager', password='ceo123')
 
-    # HR Manager (reports to CEO)
-    hm = get_or_create_emp('HM001', 'Fatima', 'Khan', 'hr.manager@company.com',
-        'Human Resources', 'HR Manager', 150000, role='manager', reports_to=ceo, password='hm123')
+    # C-Level Officers (report to CEO)
+    coo = get_or_create_emp('COO001', 'Ali', 'Raza', 'ali.raza@company.com',
+        'Operations', 'Chief Operating Officer', 300000, role='manager', reports_to=ceo, password='coo123')
 
-    # Department Managers (report to CEO)
-    mgr1 = get_or_create_emp('MGR001', 'Usman', 'Tariq', 'usman.tariq@company.com',
-        'Finance', 'Finance Manager', 180000, role='manager', reports_to=ceo, password='manager123')
-    mgr2 = get_or_create_emp('MGR002', 'Zainab', 'Ahmed', 'zainab.ahmed@company.com',
-        'Engineering', 'Engineering Manager', 190000, role='manager', reports_to=ceo, password='manager123')
-    mgr3 = get_or_create_emp('MGR003', 'Ayesha', 'Noor', 'ayesha.noor@company.com',
-        'Operations', 'Operations Manager', 170000, role='manager', reports_to=ceo, password='manager123')
-    mgr4 = get_or_create_emp('MGR004', 'Bilal', 'Sheikh', 'bilal.sheikh@company.com',
-        'Sales', 'Sales Manager', 160000, role='manager', reports_to=ceo, password='manager123')
+    cio = get_or_create_emp('CIO001', 'Zainab', 'Ahmed', 'zainab.ahmed@company.com',
+        'Engineering', 'Chief Information Officer', 300000, role='manager', reports_to=ceo, password='cio123')
 
-    # Employees (report to their managers)
-    get_or_create_emp('EMP001', 'Ahmed', 'Khan', 'ahmed.khan@company.com',
-        'Engineering', 'Senior Developer', 85000, reports_to=mgr2)
-    get_or_create_emp('EMP002', 'Sara', 'Malik', 'sara.malik@company.com',
-        'Human Resources', 'HR Executive', 70000, role='hr', reports_to=hm)
-    get_or_create_emp('EMP003', 'Omar', 'Raza', 'omar.raza@company.com',
-        'Finance', 'Financial Analyst', 75000, reports_to=mgr1)
-    get_or_create_emp('EMP004', 'Hassan', 'Iqbal', 'hassan.iqbal@company.com',
-        'Marketing', 'Marketing Lead', 72000, reports_to=mgr3)
+    cso = get_or_create_emp('CSO001', 'Bilal', 'Sheikh', 'bilal.sheikh@company.com',
+        'Marketing', 'Chief Strategic Officer', 300000, role='manager', reports_to=ceo, password='cso123')
+
+    cfo = get_or_create_emp('CFO001', 'Usman', 'Tariq', 'usman.tariq@company.com',
+        'Finance', 'Chief Financial Officer', 300000, role='manager', reports_to=ceo, password='cfo123')
+
+    # Employees under COO
+    get_or_create_emp('EMP001', 'Hamza', 'Tariq', 'hamza.tariq@company.com',
+        'Operations', 'Operations Manager', 85000, reports_to=coo)
+    get_or_create_emp('EMP002', 'Kamran', 'Shah', 'kamran.shah@company.com',
+        'Operations', 'Operations Executive', 65000, reports_to=coo)
+    get_or_create_emp('EMP003', 'Hira', 'Shah', 'hira.shah@company.com',
+        'Operations', 'Operations Coordinator', 58000, reports_to=coo)
+
+    # Employees under CIO
+    get_or_create_emp('EMP004', 'Ahmed', 'Khan', 'ahmed.khan@company.com',
+        'Engineering', 'Senior Developer', 85000, reports_to=cio)
     get_or_create_emp('EMP005', 'Fatima', 'Ali', 'fatima.ali@company.com',
-        'Engineering', 'Full Stack Developer', 80000, reports_to=mgr2)
-    get_or_create_emp('EMP006', 'Hamza', 'Tariq', 'hamza.tariq@company.com',
-        'Operations', 'Operations Executive', 65000, reports_to=mgr3)
-    get_or_create_emp('EMP007', 'Kamran', 'Shah', 'kamran.shah@company.com',
-        'Sales', 'Sales Executive', 60000, reports_to=mgr4)
-    get_or_create_emp('EMP008', 'Ali', 'Raza', 'ali.raza@company.com',
-        'Engineering', 'DevOps Engineer', 82000, reports_to=mgr2)
-    get_or_create_emp('EMP009', 'Bilal', 'Ahmed', 'bilal.ahmed@company.com',
-        'Finance', 'Accountant', 62000, reports_to=mgr1)
-    get_or_create_emp('EMP010', 'Hira', 'Shah', 'hira.shah@company.com',
-        'Human Resources', 'HR Admin', 58000, reports_to=hm)
+        'Engineering', 'Full Stack Developer', 80000, reports_to=cio)
+    get_or_create_emp('EMP006', 'Omar', 'Raza', 'omar.raza@company.com',
+        'Engineering', 'DevOps Engineer', 82000, reports_to=cio)
+
+    # Employees under CSO
+    get_or_create_emp('EMP007', 'Sara', 'Malik', 'sara.malik@company.com',
+        'Marketing', 'Marketing Lead', 72000, reports_to=cso)
+    get_or_create_emp('EMP008', 'Hassan', 'Iqbal', 'hassan.iqbal@company.com',
+        'Marketing', 'Brand Strategist', 70000, reports_to=cso)
+    get_or_create_emp('EMP009', 'Ayesha', 'Noor', 'ayesha.noor@company.com',
+        'Sales', 'Sales Executive', 68000, reports_to=cso)
+
+    # Employees under CFO
+    get_or_create_emp('EMP010', 'Bilal', 'Ahmed', 'bilal.ahmed@company.com',
+        'Finance', 'Financial Analyst', 75000, reports_to=cfo)
+    get_or_create_emp('EMP011', 'Zainab', 'Khan', 'zainab.khan@company.com',
+        'Finance', 'Accountant', 70000, reports_to=cfo)
+    get_or_create_emp('EMP012', 'Usman', 'Ali', 'usman.ali@company.com',
+        'Human Resources', 'HR Manager', 80000, reports_to=cfo)
 
     # Auto-create public payslip link for EMP001
     from payroll.models import PublicPayrollLink
