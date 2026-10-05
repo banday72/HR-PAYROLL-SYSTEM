@@ -24,7 +24,7 @@ class EmployeeForm(forms.ModelForm):
         model = Employee
         fields = ['first_name', 'last_name', 'email', 'phone',
                   'date_of_birth', 'gender', 'address', 'city', 'department', 'designation',
-                  'date_of_joining', 'salary', 'role', 'status', 'profile_picture']
+                  'date_of_joining', 'salary', 'reports_to', 'role', 'status', 'profile_picture']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -38,6 +38,7 @@ class EmployeeForm(forms.ModelForm):
             'designation': forms.TextInput(attrs={'class': 'form-control'}),
             'date_of_joining': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'salary': forms.NumberInput(attrs={'class': 'form-control'}),
+            'reports_to': forms.Select(attrs={'class': 'form-control'}),
             'role': forms.Select(attrs={'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
@@ -46,6 +47,15 @@ class EmployeeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        if 'reports_to' in self.fields:
+            instance = self.instance.pk if self.instance and self.instance.pk else None
+            qs = Employee.objects.filter(role__in=('manager', 'hr'), status='active')
+            if instance:
+                qs = qs.exclude(pk=instance)
+            qs = qs.select_related('department')
+            self.fields['reports_to'].queryset = qs
+            self.fields['reports_to'].empty_label = 'No Manager'
+            self.fields['reports_to'].label = 'Reports To (Manager)'
         if user and not user.is_superuser:
             for f in ['designation', 'salary', 'role', 'status']:
                 if f in self.fields:

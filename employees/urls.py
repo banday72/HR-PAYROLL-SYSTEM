@@ -11,6 +11,7 @@ urlpatterns = [
     path('employees/<int:pk>/edit/', views.employee_update, name='employee_update'),
     path('employees/<int:pk>/delete/', views.employee_delete, name='employee_delete'),
     path('employees/import/', views.bulk_import_employees, name='bulk_import'),
+    path('my-manager/', views.my_manager, name='my_manager'),
     path('departments/', views.department_list, name='department_list'),
     path('departments/create/', views.department_create, name='department_create'),
     path('departments/<int:pk>/edit/', views.department_update, name='department_update'),

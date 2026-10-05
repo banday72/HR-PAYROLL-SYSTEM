@@ -49,7 +49,16 @@
         <form method="get" class="row g-2 align-items-end">
             <div class="col-md-3">
                 <label class="form-label small">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="ID or Name..." value="{{ search }}">
+                <input type="text" name="search" class="form-control" placeholder="ID, name, email, department..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Department</label>
+                <select name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}" {% if selected_department == dept.id|stringformat:"d" %}selected{% endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="col-md-3">
                 <label class="form-label small">Authorization Status</label>

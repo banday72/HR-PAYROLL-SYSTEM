@@ -94,7 +94,7 @@ def dashboard(request):
 @login_required
 @hr_required
 def employee_list(request):
-    employees = Employee.objects.select_related('department').all()
+    employees = Employee.objects.select_related('department', 'reports_to').all()
     search = request.GET.get('search', '')
     department_id = request.GET.get('department', '')
     status = request.GET.get('status', '')
@@ -107,7 +107,10 @@ def employee_list(request):
             Q(phone__icontains=search) |
             Q(designation__icontains=search) |
             Q(department__name__icontains=search) |
-            Q(city__icontains=search)
+            Q(city__icontains=search) |
+            Q(reports_to__first_name__icontains=search) |
+            Q(reports_to__last_name__icontains=search) |
+            Q(reports_to__employee_id__icontains=search)
         )
     if department_id:
         employees = employees.filter(department_id=department_id)
@@ -135,6 +138,75 @@ def employee_detail(request, pk):
     return render(request, 'employees/employee_detail.html', {
         'employee': employee,
         'is_hr': is_hr,
+    })
+
+
+def _creates_report_cycle(employee, new_manager):
+    seen = set()
+    node = new_manager
+    while node is not None and node.pk not in seen:
+        if node.pk == employee.pk:
+            return True
+        seen.add(node.pk)
+        node = node.reports_to
+    return False
+
+
+@login_required
+def my_manager(request):
+    employee = get_employee(request.user)
+    if not employee:
+        messages.error(request, 'No employee profile is linked to your account.')
+        return redirect('dashboard')
+    if not (employee.is_authorized or employee.role in ('hr', 'manager')):
+        messages.error(request, 'Your account is not authorized yet. Ask HR to authorize you first.')
+        return redirect('dashboard')
+
+    managers = Employee.objects.filter(
+        role__in=('manager', 'hr'), status='active'
+    ).exclude(pk=employee.pk).select_related('department')
+
+    if request.method == 'POST':
+        selected = request.POST.get('reports_to', '').strip()
+        if selected in ('', 'none'):
+            previous = employee.reports_to.full_name if employee.reports_to else 'none'
+            employee.reports_to = None
+            employee.save(update_fields=['reports_to'])
+            log_audit(user=request.user, action='update', model_name='Employee',
+                      object_id=employee.employee_id,
+                      description=f'Removed own manager (was {previous})', request=request)
+            messages.success(request, 'Your manager has been removed.')
+            return redirect('my_manager')
+
+        try:
+            new_manager = Employee.objects.select_related('department').get(
+                pk=selected, status='active')
+        except (Employee.DoesNotExist, ValueError):
+            messages.error(request, 'That manager does not exist or is no longer active.')
+            return redirect('my_manager')
+
+        if new_manager.pk == employee.pk:
+            messages.error(request, 'You cannot be your own manager.')
+            return redirect('my_manager')
+        if new_manager.role not in ('manager', 'hr'):
+            messages.error(request, 'You can only report to a Manager or HR.')
+            return redirect('my_manager')
+        if _creates_report_cycle(employee, new_manager):
+            messages.error(request, 'That choice would create a circular reporting line.')
+            return redirect('my_manager')
+
+        employee.reports_to = new_manager
+        employee.save(update_fields=['reports_to'])
+        log_audit(user=request.user, action='update', model_name='Employee',
+                  object_id=employee.employee_id,
+                  description=f'Set own manager to {new_manager.full_name}', request=request)
+        messages.success(request, f'Manager updated to {new_manager.full_name}.')
+        return redirect('my_manager')
+
+    return render(request, 'employees/my_manager.html', {
+        'employee': employee,
+        'managers': managers,
+        'subordinates': employee.subordinates.filter(status='active').select_related('department'),
     })
 
 
@@ -283,12 +355,18 @@ def authorized_users(request):
     employees = Employee.objects.select_related('user', 'department').all()
     search = request.GET.get('search', '')
     auth_filter = request.GET.get('auth_filter', '')
+    department_id = request.GET.get('department', '')
     if search:
         employees = employees.filter(
             Q(employee_id__icontains=search) |
             Q(first_name__icontains=search) |
-            Q(last_name__icontains=search)
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(designation__icontains=search) |
+            Q(department__name__icontains=search)
         )
+    if department_id:
+        employees = employees.filter(department_id=department_id)
     if auth_filter == 'authorized':
         employees = employees.filter(is_authorized=True)
     elif auth_filter == 'unauthorized':
@@ -301,6 +379,8 @@ def authorized_users(request):
         'page_obj': page_obj,
         'search': search,
         'auth_filter': auth_filter,
+        'departments': Department.objects.all(),
+        'selected_department': department_id,
     })
 
 

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}My Manager - HR Payroll System{% endblock %}
+{% block page_title %}My Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user-tie me-1"></i> My Manager</h6>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Employee</label>
+                        <div class="fw-bold">{{ employee.employee_id }} - {{ employee.full_name }}</div>
+                        <div class="small text-muted">{{ employee.department|default:"No Department" }}{% if employee.designation %} &middot; {{ employee.designation }}{% endif %}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-muted">Current Manager</label>
+                        {% if employee.reports_to %}
+                        <div class="fw-bold">
+                            <span class="badge bg-info text-dark">{{ employee.reports_to.employee_id }}</span>
+                            {{ employee.reports_to.full_name }}
+                        </div>
+                        <div class="small text-muted">{{ employee.reports_to.department|default:"No Department" }}</div>
+                        {% else %}
+                        <div class="text-muted"><i class="fas fa-user-slash me-1"></i> No manager assigned</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small">Assign / Change My Manager</label>
+                        <select name="reports_to" class="form-select" required>
+                            <option value="none" {% if not employee.reports_to %}selected{% endif %}>-- No Manager --</option>
+                            {% for m in managers %}
+                            <option value="{{ m.pk }}" {% if employee.reports_to_id == m.pk %}selected{% endif %}>
+                                {{ m.employee_id }} - {{ m.full_name }}{% if m.department %} ({{ m.department }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Only active Managers and HR can be selected. Pick "-- No Manager --" to remove your manager.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Manager</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-users me-1"></i> My Direct Reports</h6>
+            </div>
+            <div class="card-body">
+                {% if subordinates %}
+                <div class="list-group">
+                    {% for sub in subordinates %}
+                    <a href="{% url 'employee_detail' sub.pk %}" class="list-group-item list-group-item-action">
+                        <span class="badge bg-secondary">{{ sub.employee_id }}</span>
+                        {{ sub.full_name }}
+                        <span class="small text-muted d-block">{{ sub.designation|default:sub.department|default:"-" }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No direct reports yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

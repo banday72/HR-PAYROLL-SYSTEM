@@ -16,7 +16,7 @@ def attendance_analytics(month=None, year=None):
     records = Attendance.objects.filter(date__month=month, date__year=year).select_related('employee', 'employee__department')
 
     emp_stats = defaultdict(lambda: {'present': 0, 'absent': 0, 'late': 0, 'half_day': 0, 'holiday': 0, 'total': 0})
-    dept_stats = defaultdict(lambda: {'present': 0, 'absent': 0, 'late': 0, 'total': 0})
+    dept_stats = defaultdict(lambda: {'present': 0, 'absent': 0, 'late': 0, 'half_day': 0, 'holiday': 0, 'total': 0})
     late_pattern = defaultdict(list)
     absent_risk = []
 
