@@ -39,6 +39,13 @@ def chief_id_prefix(designation):
     return None
 
 
+def default_password_for(employee_id):
+    match = re.match(r'^[A-Za-z]+', employee_id or '')
+    if match and match.group(0).lower() in CHIEF_ABBREVS:
+        return match.group(0).lower() + '1234'
+    return 'employee123'
+
+
 class Department(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -107,6 +114,10 @@ class Employee(models.Model):
     @property
     def is_manager(self):
         return self.role == 'manager'
+
+    @property
+    def default_password(self):
+        return default_password_for(self.employee_id)
 
     class Meta:
         ordering = ['employee_id']

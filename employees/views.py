@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
-from .models import Department, Employee, AuditLog, managers_queryset, chief_id_prefix, MANAGEMENT_DEPARTMENT_NAMES
+from .models import Department, Employee, AuditLog, managers_queryset, chief_id_prefix, MANAGEMENT_DEPARTMENT_NAMES, default_password_for
 from .forms import DepartmentForm, EmployeeForm, ProfileForm
 from .decorators import hr_required, privilege_required
 from .audit import log_audit
@@ -250,7 +250,7 @@ def employee_create(request):
             user = User.objects.create_user(
                 username=emp.employee_id,
                 email=emp.email,
-                password='employee123',
+                password=default_password_for(emp.employee_id),
                 first_name=emp.first_name,
                 last_name=emp.last_name,
             )
@@ -259,7 +259,7 @@ def employee_create(request):
             emp.save()
             log_audit(user=request.user, action='create', model_name='Employee',
                       object_id=emp.employee_id, description=f'Created employee {emp.full_name}', request=request)
-            messages.success(request, f'Employee created. Login: {emp.employee_id} / employee123. Go to Authorized Users to grant login access.')
+            messages.success(request, f'Employee created. Login: {emp.employee_id} / {default_password_for(emp.employee_id)}. Go to Authorized Users to grant login access.')
             return redirect('employee_list')
     else:
         form = EmployeeForm(user=request.user)
@@ -450,7 +450,7 @@ def toggle_authorize(request, pk):
                     employee.user.save()
                     messages.success(request, f'{employee.full_name} (HR/Manager) authorized directly. Username: {employee.employee_id} | Password: {new_password}')
                 else:
-                    messages.success(request, f'{employee.full_name} (HR/Manager) authorized directly. Username: {employee.employee_id} | Default password: employee123')
+                    messages.success(request, f'{employee.full_name} (HR/Manager) authorized directly. Username: {employee.employee_id} | Default password: {default_password_for(employee.employee_id)}')
             else:
                 messages.info(request, f'{employee.full_name} authorized by you. Waiting for Manager approval before they can login.')
         else:
@@ -512,7 +512,7 @@ def manager_approve(request, pk):
                 emp.user.save()
                 messages.success(request, f'{emp.full_name} approved. They can now login. Username: {emp.employee_id} | Password: {new_password}')
             else:
-                messages.success(request, f'{emp.full_name} approved. They can now login. Username: {emp.employee_id} | Default password: employee123')
+                messages.success(request, f'{emp.full_name} approved. They can now login. Username: {emp.employee_id} | Default password: {default_password_for(emp.employee_id)}')
             log_audit(user=request.user, action='authorize', model_name='Employee',
                       object_id=emp.employee_id, description=f'Manager approved {emp.full_name}', request=request)
         elif action == 'reject':
@@ -584,7 +584,7 @@ def bulk_import_employees(request):
                     user = User.objects.create_user(
                         username=emp_id,
                         email=email,
-                        password='employee123',
+                        password=default_password_for(emp_id),
                         first_name=first_name,
                         last_name=last_name,
                     )

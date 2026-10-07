@@ -13,7 +13,7 @@
                 <div class="alert alert-warning mb-0">
                     <strong>Manager Approval Required:</strong> HR has authorized these employees. 
                     As a Manager, you must review and approve them before they can login. 
-                    Set a password for them or they will use the default <code>employee123</code>.
+                    Set a password for them or they will use the default (<code>employee123</code> for staff, <code>chief acronym + 1234</code> for chiefs).
                 </div>
             </div>
         </div>
@@ -104,14 +104,14 @@
                                         <div class="alert alert-light">
                                             <strong>Login Credentials:</strong><br>
                                             <strong>Username:</strong> <code>{{ emp.employee_id }}</code><br>
-                                            <strong>Password:</strong> Leave blank for default (<code>employee123</code>) or set a new one.
+                                            <strong>Password:</strong> Leave blank for default (<code>{{ emp.default_password }}</code>) or set a new one.
                                         </div>
                                         <input type="hidden" name="action" value="approve">
                                         <div class="mb-3">
                                             <label class="form-label fw-bold">Set Custom Password (optional)</label>
                                             <div class="input-group">
                                                 <span class="input-group-text"><i class="fas fa-key"></i></span>
-                                                <input type="password" name="new_password" class="form-control" placeholder="Leave blank for default: employee123">
+                                                <input type="password" name="new_password" class="form-control" placeholder="Leave blank for default: {{ emp.default_password }}">
                                             </div>
                                             <small class="text-muted">Min 8 characters. Leave empty to use default password.</small>
                                         </div>
