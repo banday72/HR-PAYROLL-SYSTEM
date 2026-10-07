@@ -4,6 +4,7 @@ import base64
 from datetime import date
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
@@ -11,9 +12,9 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
-from .models import Department, Employee, AuditLog
+from .models import Department, Employee, AuditLog, managers_queryset
 from .forms import DepartmentForm, EmployeeForm, ProfileForm
-from .decorators import hr_required
+from .decorators import hr_required, privilege_required
 from .audit import log_audit
 
 
@@ -34,6 +35,30 @@ def get_employee(user):
         return Employee.objects.get(user=user)
     except Employee.DoesNotExist:
         return None
+
+
+PROFILE_MIME = {
+    'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
+    'gif': 'image/gif', 'webp': 'image/webp', 'svg': 'image/svg+xml',
+    'pdf': 'application/pdf',
+}
+
+
+def store_picture_as_b64(form, instance):
+    upload = form.cleaned_data.get('profile_picture')
+    if not isinstance(upload, UploadedFile):
+        return
+    name = getattr(upload, 'name', '') or ''
+    ext = name.rsplit('.', 1)[-1].lower() if '.' in name else ''
+    mime = PROFILE_MIME.get(ext, 'application/octet-stream')
+    try:
+        upload.seek(0)
+        payload = upload.read()
+    except (ValueError, OSError):
+        return
+    instance.profile_picture_b64 = 'data:%s;base64,%s' % (
+        mime, base64.b64encode(payload).decode('utf-8'))
+    instance.profile_picture = None
 
 
 @login_required
@@ -162,9 +187,7 @@ def my_manager(request):
         messages.error(request, 'Your account is not authorized yet. Ask HR to authorize you first.')
         return redirect('dashboard')
 
-    managers = Employee.objects.filter(
-        role__in=('manager', 'hr'), status='active'
-    ).exclude(pk=employee.pk).select_related('department')
+    managers = managers_queryset().exclude(pk=employee.pk)
 
     if request.method == 'POST':
         selected = request.POST.get('reports_to', '').strip()
@@ -188,8 +211,8 @@ def my_manager(request):
         if new_manager.pk == employee.pk:
             messages.error(request, 'You cannot be your own manager.')
             return redirect('my_manager')
-        if new_manager.role not in ('manager', 'hr'):
-            messages.error(request, 'You can only report to a Manager or HR.')
+        if not (new_manager.role in ('manager', 'hr') or new_manager.is_chief):
+            messages.error(request, 'You can only report to a Manager, HR or a Chief.')
             return redirect('my_manager')
         if _creates_report_cycle(employee, new_manager):
             messages.error(request, 'That choice would create a circular reporting line.')
@@ -217,6 +240,7 @@ def employee_create(request):
         form = EmployeeForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             emp = form.save(commit=False)
+            store_picture_as_b64(form, emp)
             emp.employee_id = generate_employee_id()
             emp.save()
             user = User.objects.create_user(
@@ -246,7 +270,9 @@ def employee_update(request, pk):
     if request.method == 'POST':
         form = EmployeeForm(request.POST, request.FILES, instance=employee, user=request.user)
         if form.is_valid():
-            form.save()
+            emp = form.save(commit=False)
+            store_picture_as_b64(form, emp)
+            emp.save()
             log_audit(user=request.user, action='update', model_name='Employee',
                       object_id=employee.employee_id, description=f'Updated employee {employee.full_name}', request=request)
             messages.success(request, 'Employee updated successfully.')
@@ -350,7 +376,7 @@ def change_password(request):
 
 
 @login_required
-@hr_required
+@privilege_required
 def authorized_users(request):
     employees = Employee.objects.select_related('user', 'department').all()
     search = request.GET.get('search', '')
@@ -385,7 +411,7 @@ def authorized_users(request):
 
 
 @login_required
-@hr_required
+@privilege_required
 def toggle_authorize(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
@@ -423,7 +449,7 @@ def toggle_authorize(request, pk):
 @login_required
 def pending_approvals(request):
     employee = get_employee(request.user)
-    is_manager = request.user.is_superuser or (employee and employee.role == 'manager')
+    is_manager = request.user.is_superuser or (employee and (employee.role == 'manager' or employee.is_chief))
     if not is_manager:
         messages.error(request, 'Only Managers can access this page.')
         return redirect('dashboard')
@@ -451,7 +477,7 @@ def pending_approvals(request):
 @login_required
 def manager_approve(request, pk):
     employee_obj = get_employee(request.user)
-    is_manager = request.user.is_superuser or (employee_obj and employee_obj.role == 'manager')
+    is_manager = request.user.is_superuser or (employee_obj and (employee_obj.role == 'manager' or employee_obj.is_chief))
     if not is_manager:
         messages.error(request, 'Only Managers can approve authorizations.')
         return redirect('dashboard')
@@ -485,7 +511,7 @@ def manager_approve(request, pk):
 
 
 @login_required
-@hr_required
+@privilege_required
 def bulk_import_employees(request):
     if request.method == 'POST' and request.FILES.get('csv_file'):
         csv_file = request.FILES['csv_file']
@@ -578,7 +604,7 @@ def bulk_import_employees(request):
 
 
 @login_required
-@hr_required
+@privilege_required
 def audit_log_list(request):
     logs = AuditLog.objects.select_related('user').all()
     search = request.GET.get('search', '')

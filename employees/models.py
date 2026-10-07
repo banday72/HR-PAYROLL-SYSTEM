@@ -1,6 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+CHIEF_KEYWORDS = (
+    'chief', 'ceo', 'coo', 'cio', 'cso', 'cfo', 'cto', 'cmo', 'chro',
+    'director', 'general manager',
+)
+HR_DEPARTMENT_NAME = 'Human Resources'
+
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
@@ -56,8 +62,17 @@ class Employee(models.Model):
         return f"{self.first_name} {self.last_name}"
 
     @property
+    def is_chief(self):
+        designation = (self.designation or '').lower()
+        return any(keyword in designation for keyword in CHIEF_KEYWORDS)
+
+    @property
+    def in_hr_department(self):
+        return bool(self.department and self.department.name == HR_DEPARTMENT_NAME)
+
+    @property
     def is_hr(self):
-        return self.role in ('hr', 'manager')
+        return self.role in ('hr', 'manager') or self.is_chief or self.in_hr_department
 
     @property
     def is_manager(self):
@@ -65,6 +80,13 @@ class Employee(models.Model):
 
     class Meta:
         ordering = ['employee_id']
+
+
+def managers_queryset():
+    condition = models.Q(role__in=('manager', 'hr'))
+    for keyword in CHIEF_KEYWORDS:
+        condition |= models.Q(designation__icontains=keyword)
+    return Employee.objects.filter(condition, status='active').select_related('department')
 
 
 class AuditLog(models.Model):

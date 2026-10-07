@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Department, Employee
+from .models import Department, Employee, managers_queryset
 
 
 class DepartmentForm(forms.ModelForm):
@@ -14,6 +14,11 @@ class DepartmentForm(forms.ModelForm):
 
 
 class EmployeeForm(forms.ModelForm):
+    FIELD_ORDER = [
+        'employee_id_preview', 'first_name', 'last_name', 'email', 'phone',
+        'department', 'designation', 'reports_to', 'salary', 'role', 'status',
+    ]
+
     employee_id_preview = forms.CharField(
         label='Employee ID',
         required=False,
@@ -45,21 +50,17 @@ class EmployeeForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
+        kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        self.order_fields([f for f in self.FIELD_ORDER if f in self.fields])
         if 'reports_to' in self.fields:
             instance = self.instance.pk if self.instance and self.instance.pk else None
-            qs = Employee.objects.filter(role__in=('manager', 'hr'), status='active')
+            qs = managers_queryset()
             if instance:
                 qs = qs.exclude(pk=instance)
-            qs = qs.select_related('department')
             self.fields['reports_to'].queryset = qs
             self.fields['reports_to'].empty_label = 'No Manager'
             self.fields['reports_to'].label = 'Reports To (Manager)'
-        if user and not user.is_superuser:
-            for f in ['designation', 'salary', 'role', 'status']:
-                if f in self.fields:
-                    del self.fields[f]
 
 
 class ProfileForm(forms.ModelForm):
