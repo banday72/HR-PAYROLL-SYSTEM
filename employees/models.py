@@ -1,11 +1,24 @@
+import re
+
 from django.db import models
 from django.contrib.auth.models import User
 
-CHIEF_KEYWORDS = (
-    'chief', 'ceo', 'coo', 'cio', 'cso', 'cfo', 'cto', 'cmo', 'chro',
-    'director', 'general manager',
-)
+CHIEF_ABBREVS = ('ceo', 'coo', 'cio', 'cso', 'cfo', 'cto', 'cmo', 'chro')
+CHIEF_PHRASES = ('chief', 'director', 'general manager')
+CHIEF_KEYWORDS = CHIEF_ABBREVS + CHIEF_PHRASES
 HR_DEPARTMENT_NAME = 'Human Resources'
+
+
+def is_chief_designation(designation):
+    if not designation:
+        return False
+    words = re.sub(r'[^a-z0-9]+', ' ', designation.lower()).split()
+    if not words:
+        return False
+    if set(words) & set(CHIEF_ABBREVS):
+        return True
+    text = ' '.join(words)
+    return any(phrase in text for phrase in CHIEF_PHRASES)
 
 
 class Department(models.Model):
@@ -63,8 +76,7 @@ class Employee(models.Model):
 
     @property
     def is_chief(self):
-        designation = (self.designation or '').lower()
-        return any(keyword in designation for keyword in CHIEF_KEYWORDS)
+        return is_chief_designation(self.designation)
 
     @property
     def in_hr_department(self):
@@ -84,7 +96,10 @@ class Employee(models.Model):
 
 def managers_queryset():
     condition = models.Q(role__in=('manager', 'hr'))
-    for keyword in CHIEF_KEYWORDS:
+    for keyword in CHIEF_ABBREVS:
+        condition |= models.Q(
+            designation__iregex=r'(^|[^a-z0-9])%s($|[^a-z0-9])' % re.escape(keyword))
+    for keyword in CHIEF_PHRASES:
         condition |= models.Q(designation__icontains=keyword)
     return Employee.objects.filter(condition, status='active').select_related('department')
 
