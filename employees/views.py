@@ -12,22 +12,26 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
-from .models import Department, Employee, AuditLog, managers_queryset
+from .models import Department, Employee, AuditLog, managers_queryset, chief_id_prefix, MANAGEMENT_DEPARTMENT_NAMES
 from .forms import DepartmentForm, EmployeeForm, ProfileForm
 from .decorators import hr_required, privilege_required
 from .audit import log_audit
 
 
-def generate_employee_id():
-    last_emp = Employee.objects.order_by('-id').first()
-    if last_emp and last_emp.employee_id.startswith('EMP'):
-        try:
-            last_num = int(last_emp.employee_id.replace('EMP', ''))
-            return f'EMP{last_num + 1:03d}'
-        except ValueError:
-            pass
-    count = Employee.objects.count()
-    return f'EMP{count + 1:03d}'
+def generate_employee_id(designation=None, department=None):
+    prefix = chief_id_prefix(designation)
+    department_name = (getattr(department, 'name', department) or '').strip().lower()
+    if prefix is None and department_name in MANAGEMENT_DEPARTMENT_NAMES:
+        prefix = 'C'
+    if prefix is None:
+        prefix = 'EMP'
+    highest = 0
+    for value in Employee.objects.filter(
+            employee_id__startswith=prefix).values_list('employee_id', flat=True):
+        suffix = value[len(prefix):]
+        if suffix.isdigit():
+            highest = max(highest, int(suffix))
+    return '%s%03d' % (prefix, highest + 1)
 
 
 def get_employee(user):
@@ -241,7 +245,7 @@ def employee_create(request):
         if form.is_valid():
             emp = form.save(commit=False)
             store_picture_as_b64(form, emp)
-            emp.employee_id = generate_employee_id()
+            emp.employee_id = generate_employee_id(emp.designation, emp.department)
             emp.save()
             user = User.objects.create_user(
                 username=emp.employee_id,
@@ -260,7 +264,18 @@ def employee_create(request):
     else:
         form = EmployeeForm(user=request.user)
         form.fields['employee_id_preview'].initial = generate_employee_id()
-    return render(request, 'employees/employee_form.html', {'form': form, 'title': 'Add Employee'})
+    return render(request, 'employees/employee_form.html',
+                  {'form': form, 'title': 'Add Employee', 'auto_employee_id': True})
+
+
+@login_required
+def next_employee_id(request):
+    designation = request.GET.get('designation', '').strip()
+    department = None
+    department_id = request.GET.get('department_id', '')
+    if department_id.isdigit():
+        department = Department.objects.filter(pk=int(department_id)).first()
+    return JsonResponse({'employee_id': generate_employee_id(designation, department)})
 
 
 @login_required
@@ -539,8 +554,12 @@ def bulk_import_employees(request):
                         skipped_count += 1
                         continue
 
+                    department = None
+                    if department_name:
+                        department, _ = Department.objects.get_or_create(name=department_name)
+
                     if not emp_id:
-                        emp_id = generate_employee_id()
+                        emp_id = generate_employee_id(designation, department)
                     elif Employee.objects.filter(employee_id=emp_id).exists():
                         skipped_count += 1
                         continue
@@ -548,10 +567,6 @@ def bulk_import_employees(request):
                     if Employee.objects.filter(email=email).exists():
                         skipped_count += 1
                         continue
-
-                    department = None
-                    if department_name:
-                        department, _ = Department.objects.get_or_create(name=department_name)
 
                     emp = Employee.objects.create(
                         employee_id=emp_id,

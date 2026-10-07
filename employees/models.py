@@ -7,6 +7,7 @@ CHIEF_ABBREVS = ('ceo', 'coo', 'cio', 'cso', 'cfo', 'cto', 'cmo', 'chro')
 CHIEF_PHRASES = ('chief', 'director', 'general manager')
 CHIEF_KEYWORDS = CHIEF_ABBREVS + CHIEF_PHRASES
 HR_DEPARTMENT_NAME = 'Human Resources'
+MANAGEMENT_DEPARTMENT_NAMES = ('managment', 'management')
 
 
 def is_chief_designation(designation):
@@ -19,6 +20,23 @@ def is_chief_designation(designation):
         return True
     text = ' '.join(words)
     return any(phrase in text for phrase in CHIEF_PHRASES)
+
+
+def chief_id_prefix(designation):
+    if not designation:
+        return None
+    words = re.sub(r'[^A-Za-z0-9]+', ' ', designation).split()
+    if not words:
+        return None
+    acronyms = [word.upper() for word in words if word.lower() in CHIEF_ABBREVS]
+    if acronyms:
+        return acronyms[0]
+    lowered = [word.lower() for word in words]
+    if 'chief' in lowered:
+        initials = ''.join(word[0].upper() for word in words if word.isalpha())
+        if 2 <= len(initials) <= 5:
+            return initials
+    return None
 
 
 class Department(models.Model):

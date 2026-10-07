@@ -27,4 +27,25 @@
         </div>
     </div>
 </div>
+{% if auto_employee_id %}
+<script>
+(function () {
+    var preview = document.getElementById('id_employee_id_preview');
+    var designation = document.getElementById('id_designation');
+    var department = document.getElementById('id_department');
+    if (!preview || !designation) { return; }
+    function refresh() {
+        var params = new URLSearchParams();
+        params.set('designation', designation.value);
+        if (department) { params.set('department_id', department.value); }
+        fetch("{% url 'next_employee_id' %}?" + params.toString(), {credentials: 'same-origin'})
+            .then(function (r) { return r.json(); })
+            .then(function (data) { if (data.employee_id) { preview.value = data.employee_id; } })
+            .catch(function () {});
+    }
+    designation.addEventListener('change', refresh);
+    if (department) { department.addEventListener('change', refresh); }
+})();
+</script>
+{% endif %}
 {% endblock %}
