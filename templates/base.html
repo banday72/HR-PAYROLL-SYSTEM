@@ -192,6 +192,9 @@
             <a class="nav-link {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}" href="{% url 'audit_log' %}">
                 <i class="fas fa-history nav-icon" style="color:#1cc88a;"></i> Activity Log
             </a>
+            <a class="nav-link {% if 'login_slide' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'login_slide_list' %}">
+                <i class="fas fa-images nav-icon" style="color:#1cc88a;"></i> Login Slideshow
+            </a>
         </nav>
 
         <div class="sidebar-heading bright"><i class="fas fa-star me-1"></i> PEOPLE</div>

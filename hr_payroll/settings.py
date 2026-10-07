@@ -63,6 +63,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'hr_payroll.context_processors.role_context',
+                'hr_payroll.context_processors.login_slides',
             ],
         },
     },

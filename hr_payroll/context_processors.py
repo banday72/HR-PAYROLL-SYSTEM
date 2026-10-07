@@ -28,3 +28,13 @@ def role_context(request):
         except Exception:
             pass
     return context
+
+
+def login_slides(request):
+    slides = []
+    try:
+        from employees.models import LoginSlide
+        slides = [slide.picture_b64 for slide in LoginSlide.objects.filter(is_active=True)[:6]]
+    except Exception:
+        pass
+    return {'login_slides': slides}

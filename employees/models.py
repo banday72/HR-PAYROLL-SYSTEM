@@ -133,6 +133,23 @@ def managers_queryset():
     return Employee.objects.filter(condition, status='active').select_related('department')
 
 
+class LoginSlide(models.Model):
+    name = models.CharField(max_length=100, blank=True)
+    picture_b64 = models.TextField(help_text='Base64 encoded background image (data URI)')
+    picture_name = models.CharField(max_length=255, blank=True)
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+        verbose_name = 'Login background'
+        verbose_name_plural = 'Login backgrounds'
+
+    def __str__(self):
+        return self.name or self.picture_name or 'Slide %d' % self.id
+
+
 class AuditLog(models.Model):
     ACTION_CHOICES = [
         ('login', 'Login'),

@@ -72,3 +72,15 @@ class ProfileForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
+
+
+class LoginSlideForm(forms.Form):
+    name = forms.CharField(max_length=100, required=False, label='Slide name (optional)',
+                           widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Office tower'}))
+    picture = forms.ImageField(label='Background image',
+                               widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
+    is_active = forms.BooleanField(required=False, initial=True,
+                                   label='Active (shown on login page)')
+    sort_order = forms.IntegerField(required=False, initial=0, min_value=0, max_value=999,
+                                    label='Order (lowest first)',
+                                    widget=forms.NumberInput(attrs={'class': 'form-control'}))

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Login Slideshow - HR Payroll System{% endblock %}
+{% block page_title %}Login Page Backgrounds{% endblock %}
+
+{% block content %}
+<div class="alert alert-info">
+    <i class="fas fa-images me-1"></i>
+    These images rotate as a slideshow behind the <strong>Sign In</strong> page.
+    They are stored in the database (base64), so uploads survive Vercel's read-only filesystem.
+    Keep each image under ~2&nbsp;MB for a fast login page.
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-plus-circle me-1"></i> Add Background</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Slide name (optional)</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Background image</label>
+                        {{ form.picture }}
+                        {% if form.picture.errors %}<div class="text-danger small">{{ form.picture.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Order (lowest first)</label>
+                        {{ form.sort_order }}
+                    </div>
+                    <div class="mb-4 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active (shown on login page)</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-upload me-1"></i> Upload Slide
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-film me-1"></i> Current Slides ({{ slides|length }})</h6>
+                <span class="small text-muted">Max 6 shown on the login page</span>
+            </div>
+            <div class="card-body">
+                {% if slides %}
+                <div class="list-group">
+                    {% for slide in slides %}
+                    <div class="list-group-item d-flex align-items-center gap-3">
+                        <div style="width:110px; height:60px; border-radius:8px; background-image:url('{{ slide.picture_b64 }}'); background-size:cover; background-position:center; flex:0 0 auto; border:1px solid #dee2e6;"></div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">{{ slide.name|default:slide.picture_name }}</div>
+                            <div class="small text-muted">
+                                Order {{ slide.sort_order }}
+                                {% if slide.is_active %}<span class="badge bg-success ms-1">Active</span>
+                                {% else %}<span class="badge bg-secondary ms-1">Inactive</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <form method="post" action="{% url 'login_slide_toggle' slide.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm {% if slide.is_active %}btn-warning{% else %}btn-success{% endif %}">
+                                    {% if slide.is_active %}<i class="fas fa-eye-slash"></i>{% else %}<i class="fas fa-eye"></i>{% endif %}
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'login_slide_delete' slide.pk %}" onsubmit="return confirm('Delete this login background?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-image fa-3x mb-3" style="opacity:.4;"></i>
+                    <p class="mb-0">No backgrounds yet. Upload one on the left to start the login slideshow.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

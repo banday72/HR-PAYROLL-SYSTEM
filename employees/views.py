@@ -12,8 +12,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
-from .models import Department, Employee, AuditLog, managers_queryset, chief_id_prefix, MANAGEMENT_DEPARTMENT_NAMES, default_password_for
-from .forms import DepartmentForm, EmployeeForm, ProfileForm
+from .models import Department, Employee, AuditLog, LoginSlide, managers_queryset, chief_id_prefix, MANAGEMENT_DEPARTMENT_NAMES, default_password_for
+from .forms import DepartmentForm, EmployeeForm, ProfileForm, LoginSlideForm
 from .decorators import hr_required, privilege_required
 from .audit import log_audit
 
@@ -63,6 +63,18 @@ def store_picture_as_b64(form, instance):
     instance.profile_picture_b64 = 'data:%s;base64,%s' % (
         mime, base64.b64encode(payload).decode('utf-8'))
     instance.profile_picture = None
+
+
+def file_to_data_uri(upload):
+    name = getattr(upload, 'name', '') or ''
+    ext = name.rsplit('.', 1)[-1].lower() if '.' in name else ''
+    mime = PROFILE_MIME.get(ext, 'application/octet-stream')
+    try:
+        upload.seek(0)
+        payload = upload.read()
+    except (ValueError, OSError):
+        return None
+    return 'data:%s;base64,%s' % (mime, base64.b64encode(payload).decode('utf-8'))
 
 
 @login_required
@@ -523,6 +535,61 @@ def manager_approve(request, pk):
             log_audit(user=request.user, action='deauthorize', model_name='Employee',
                       object_id=emp.employee_id, description=f'Manager rejected {emp.full_name}', request=request)
     return redirect('pending_approvals')
+
+
+@login_required
+@privilege_required
+def login_slide_list(request):
+    slides = LoginSlide.objects.all()
+    if request.method == 'POST':
+        form = LoginSlideForm(request.POST, request.FILES)
+        if form.is_valid() and request.FILES.get('picture'):
+            data_uri = file_to_data_uri(form.cleaned_data['picture'])
+            if data_uri:
+                slide = LoginSlide.objects.create(
+                    name=form.cleaned_data.get('name', '').strip(),
+                    picture_b64=data_uri,
+                    picture_name=getattr(form.cleaned_data['picture'], 'name', '') or '',
+                    is_active=form.cleaned_data.get('is_active', True),
+                    sort_order=form.cleaned_data.get('sort_order') or 0,
+                )
+                log_audit(user=request.user, action='create', model_name='LoginSlide',
+                          object_id=slide.pk, description=f'Added login background {slide}', request=request)
+                messages.success(request, 'Login background added.')
+            else:
+                messages.error(request, 'Could not read the image file.')
+        else:
+            messages.error(request, 'Please choose a valid image file.')
+        return redirect('login_slide_list')
+    form = LoginSlideForm()
+    return render(request, 'employees/login_slide_list.html', {'slides': slides, 'form': form})
+
+
+@login_required
+@privilege_required
+def login_slide_delete(request, pk):
+    slide = get_object_or_404(LoginSlide, pk=pk)
+    if request.method == 'POST':
+        name = str(slide)
+        slide.delete()
+        log_audit(user=request.user, action='delete', model_name='LoginSlide',
+                  object_id=pk, description=f'Deleted login background {name}', request=request)
+        messages.success(request, 'Login background deleted.')
+    return redirect('login_slide_list')
+
+
+@login_required
+@privilege_required
+def login_slide_toggle(request, pk):
+    slide = get_object_or_404(LoginSlide, pk=pk)
+    if request.method == 'POST':
+        slide.is_active = not slide.is_active
+        slide.save(update_fields=['is_active'])
+        state = 'enabled' if slide.is_active else 'disabled'
+        log_audit(user=request.user, action='update', model_name='LoginSlide',
+                  object_id=pk, description=f'{state.title()} login background {slide}', request=request)
+        messages.info(request, f'Login background {state}.')
+    return redirect('login_slide_list')
 
 
 @login_required
