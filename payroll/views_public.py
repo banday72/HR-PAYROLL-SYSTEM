@@ -17,7 +17,7 @@ def public_salary_slip(request, employee_id, token):
     return render(request, 'payroll/public_salary_slip.html', {
         'employee': employee,
         'payrolls': payrolls,
-        'company_name': 'M.T.B.C. International',
+        'company_name': 'CoreCloud',
         'company_tagline': 'CoreCloud HR Payroll',
         'is_public': True,
     })

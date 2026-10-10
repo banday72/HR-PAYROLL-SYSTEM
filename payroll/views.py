@@ -357,7 +357,7 @@ def salary_slip_pdf(request, pk):
 
     header_data = [
         ['Employee Details', '', 'Company Details', ''],
-        ['Name:', employee.full_name, 'Company:', 'HR Payroll System'],
+        ['Name:', employee.full_name, 'Company:', 'CoreCloud'],
         ['ID:', employee.employee_id, 'Department:', str(employee.department or 'N/A')],
         ['Designation:', employee.designation or 'N/A', 'Date:', payroll.payment_date.strftime('%d %b %Y') if payroll.payment_date else 'Pending'],
         ['Joining Date:', employee.date_of_joining.strftime('%d %b %Y'), '', ''],

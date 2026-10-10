@@ -21,7 +21,7 @@
                     </div>
                     <div class="col-md-6 text-md-end">
                         <h5 class="text-primary">Company Details</h5>
-                        <p><strong>Company:</strong> HR Payroll System</p>
+                        <p><strong>Company:</strong> CoreCloud</p>
                         <p><strong>Pay Period:</strong> {{ payroll.get_month_display }} {{ payroll.year }}</p>
                         <p><strong>Payment Date:</strong> {{ payroll.payment_date|date:"M d, Y"|default:"Pending" }}</p>
                         {% if payroll.generated_type == 'auto' %}
