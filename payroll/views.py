@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
 from django.core.paginator import Paginator
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Count, Avg, Q
 from decimal import Decimal
 from datetime import datetime, date
 from calendar import monthrange
@@ -11,7 +11,7 @@ import csv
 from employees.decorators import permission_required
 from .models import Payroll, PayrollPolicy, PayrollBreakdown, BoutiqueProduct, BoutiqueIssue, BudgetLoan
 from .forms import PayrollForm, PayrollFilterForm, PayrollPolicyForm, BoutiqueProductForm, BoutiqueIssueForm, BudgetLoanForm
-from employees.models import Employee, Department
+from employees.models import Employee, Department, managers_q
 from employees.views import get_employee
 from attendance.models import Attendance
 from leaves.models import Leave
@@ -452,6 +452,18 @@ def auto_generate_payroll(request):
 
         policy = get_active_policy()
         employees = Employee.objects.filter(status='active')
+
+        department_id = request.POST.get('department', '').strip()
+        employee_id = request.POST.get('employee', '').strip()
+        staff = request.POST.get('staff', 'all').strip()
+
+        if department_id:
+            employees = employees.filter(department_id=department_id)
+        if employee_id:
+            employees = employees.filter(employee_id=employee_id)
+        if staff == 'management':
+            employees = employees.filter(managers_q())
+
         created_count = 0
         updated_count = 0
         errors = []
@@ -507,6 +519,8 @@ def auto_generate_payroll(request):
             messages.success(request, f'Created {created_count} new payroll records.')
         if updated_count > 0:
             messages.info(request, f'Updated {updated_count} existing payroll records.')
+        if created_count == 0 and updated_count == 0:
+            messages.warning(request, 'No payroll records were created. No matching employees found for the selected filters.')
         if errors:
             for error in errors:
                 messages.warning(request, error)
@@ -515,9 +529,13 @@ def auto_generate_payroll(request):
 
     current_month = datetime.now().month
     current_year = datetime.now().year
+    departments = Department.objects.all().order_by('name')
+    employees = Employee.objects.filter(status='active').order_by('employee_id')
     return render(request, 'payroll/auto_generate.html', {
         'current_month': current_month,
         'current_year': current_year,
+        'departments': departments,
+        'payroll_employees': employees,
     })
 
 

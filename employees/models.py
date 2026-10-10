@@ -136,14 +136,18 @@ class Employee(models.Model):
         ordering = ['employee_id']
 
 
-def managers_queryset():
+def managers_q():
     condition = models.Q(role__in=('manager', 'hr'))
     for keyword in CHIEF_ABBREVS:
         condition |= models.Q(
             designation__iregex=r'(^|[^a-z0-9])%s($|[^a-z0-9])' % re.escape(keyword))
     for keyword in CHIEF_PHRASES:
         condition |= models.Q(designation__icontains=keyword)
-    return Employee.objects.filter(condition, status='active').select_related('department')
+    return condition
+
+
+def managers_queryset():
+    return Employee.objects.filter(managers_q(), status='active').select_related('department')
 
 
 class LoginSlide(models.Model):

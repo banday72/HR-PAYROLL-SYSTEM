@@ -5,6 +5,41 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-filter"></i> Search / Filter Range</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Department</label>
+                        <select name="department" form="auto-payroll-form" class="form-control">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.pk }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Employee</label>
+                        <input type="text" class="form-control mb-2" placeholder="Type to search name or ID..." id="employee-search">
+                        <select name="employee" form="auto-payroll-form" class="form-control" id="employee-select">
+                            <option value="">All Employees</option>
+                            {% for emp in payroll_employees %}
+                            <option value="{{ emp.employee_id }}">{{ emp.employee_id }} - {{ emp.first_name }} {{ emp.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Staff</label>
+                        <select name="staff" form="auto-payroll-form" class="form-control">
+                            <option value="all">All Staff</option>
+                            <option value="management">Management Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="card shadow">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-magic"></i> Auto Generate Payroll</h6>
@@ -18,9 +53,10 @@
                         <li><strong>Bonuses</strong> are awarded based on attendance percentage</li>
                         <li><strong>Tax</strong> and <strong>deductions</strong> are applied per policy</li>
                         <li>If a payroll already exists for the employee/month/year, it will be <strong>updated</strong></li>
+                        <li>Use the filters above to generate payroll for a <strong>department</strong>, a single <strong>employee</strong>, or <strong>management only</strong></li>
                     </ul>
                 </div>
-                <form method="post">
+                <form method="post" id="auto-payroll-form">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -50,7 +86,7 @@
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'payroll_list' %}" class="btn btn-secondary">Cancel</a>
                         <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-magic"></i> Generate Payroll for All Employees
+                            <i class="fas fa-magic"></i> Generate Payroll
                         </button>
                     </div>
                 </form>
@@ -58,4 +94,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var search = document.getElementById('employee-search');
+    var select = document.getElementById('employee-select');
+    if (!search || !select) { return; }
+    search.addEventListener('input', function () {
+        var q = search.value.toLowerCase();
+        for (var opt of select.options) {
+            if (!opt.value) { continue; }
+            var match = opt.text.toLowerCase().indexOf(q) !== -1;
+            opt.style.display = match ? '' : 'none';
+        }
+        if (q === '' && !select.value) { select.value = ''; }
+    });
+});
+</script>
 {% endblock %}
