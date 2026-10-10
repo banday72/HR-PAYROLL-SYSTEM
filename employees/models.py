@@ -116,6 +116,19 @@ class Employee(models.Model):
         return self.role == 'manager'
 
     @property
+    def permission_group(self):
+        from .permissions import permission_group as _permission_group
+        return _permission_group(self)
+
+    @property
+    def permissions(self):
+        from .permissions import permissions_for
+        return permissions_for(self)
+
+    def has_perm(self, perm):
+        return perm in self.permissions
+
+    @property
     def default_password(self):
         return default_password_for(self.employee_id)
 

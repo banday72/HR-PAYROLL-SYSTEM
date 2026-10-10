@@ -60,7 +60,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if travel.status == 'pending' and is_hr %}
+                            {% if travel.status == 'pending' and can.approve_travel %}
                             <a href="{% url 'travel_action' travel.pk %}" class="btn btn-sm btn-outline-success" title="Review">
                                 <i class="fas fa-gavel"></i>
                             </a>

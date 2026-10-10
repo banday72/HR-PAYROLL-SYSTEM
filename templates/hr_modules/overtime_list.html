@@ -58,7 +58,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if record.status == 'pending' and is_hr %}
+                            {% if record.status == 'pending' and can.approve_overtime %}
                             <a href="{% url 'overtime_action' record.pk %}" class="btn btn-sm btn-outline-success" title="Review">
                                 <i class="fas fa-gavel"></i>
                             </a>

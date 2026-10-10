@@ -5,6 +5,13 @@ from django.http import JsonResponse
 from django.utils import timezone
 from datetime import date, timedelta
 
+from employees.decorators import permission_required
+from employees.permissions import permissions_for_user
+
+
+def has_any_permission(user, *perms):
+    return user.is_superuser or bool(perms and permissions_for_user(user) & set(perms))
+
 
 def create_notification(employee, title, message, notif_type='info', link=''):
     from .models import Notification
@@ -73,7 +80,7 @@ def document_list(request):
     from employees.models import Employee
     from .models import EmployeeDocument
     emp = Employee.objects.filter(user=request.user).first()
-    if request.user.is_superuser or (emp and emp.is_hr):
+    if has_any_permission(request.user, 'manage_documents'):
         docs = EmployeeDocument.objects.all()
         emp_filter = request.GET.get('employee')
         if emp_filter:
@@ -95,6 +102,9 @@ def document_upload(request):
         target_emp = Employee.objects.filter(employee_id=target_emp_id).first()
         if not target_emp:
             messages.error(request, 'Employee not found.')
+            return redirect('document_list')
+        if not (request.user.is_superuser or has_any_permission(request.user, 'manage_documents') or (emp and target_emp.pk == emp.pk)):
+            messages.error(request, 'You can only upload documents for yourself.')
             return redirect('document_list')
         uploaded_file = request.FILES.get('file')
         if uploaded_file:
@@ -150,7 +160,7 @@ def review_list(request):
     year_filter = request.GET.get('year', '')
     employee_filter = request.GET.get('employee', '')
 
-    if request.user.is_superuser or (emp and emp.is_hr):
+    if has_any_permission(request.user, 'manage_reviews'):
         reviews = PerformanceReview.objects.all()
     elif emp:
         reviews = PerformanceReview.objects.filter(employee=emp)
@@ -169,7 +179,7 @@ def review_list(request):
     completed = reviews.filter(status='completed').count()
 
     emp_stats = []
-    if request.user.is_superuser or (emp and emp.is_hr):
+    if has_any_permission(request.user, 'manage_reviews'):
         all_emps = Employee.objects.filter(status='active')
         for e in all_emps:
             e_reviews = PerformanceReview.objects.filter(employee=e)
@@ -186,6 +196,7 @@ def review_list(request):
 
 
 @login_required
+@permission_required('manage_reviews')
 def review_create(request):
     from employees.models import Employee
     from .models import PerformanceReview
@@ -234,6 +245,7 @@ def training_list(request):
 
 
 @login_required
+@permission_required('manage_training')
 def training_create(request):
     from employees.models import Employee
     from .models import Training
@@ -254,6 +266,7 @@ def training_create(request):
 
 
 @login_required
+@permission_required('manage_training')
 def training_enroll(request, pk):
     from employees.models import Employee
     from .models import Training, TrainingEnrollment
@@ -292,7 +305,7 @@ def travel_list(request):
     from employees.models import Employee
     from .models import TravelRequest
     emp = Employee.objects.filter(user=request.user).first()
-    if request.user.is_superuser or (emp and emp.is_hr):
+    if has_any_permission(request.user, 'view_all_travel'):
         travels = TravelRequest.objects.all()
     elif emp:
         travels = TravelRequest.objects.filter(employee=emp)
@@ -333,6 +346,7 @@ def travel_create(request):
 
 
 @login_required
+@permission_required('approve_travel')
 def travel_action(request, pk):
     from .models import TravelRequest
     travel = get_object_or_404(TravelRequest, pk=pk)
@@ -357,7 +371,7 @@ def overtime_list(request):
     from employees.models import Employee
     from .models import OvertimeRecord
     emp = Employee.objects.filter(user=request.user).first()
-    if request.user.is_superuser or (emp and emp.is_hr):
+    if has_any_permission(request.user, 'view_all_overtime'):
         records = OvertimeRecord.objects.all()
     elif emp:
         records = OvertimeRecord.objects.filter(employee=emp)
@@ -392,6 +406,7 @@ def overtime_create(request):
 
 
 @login_required
+@permission_required('approve_overtime')
 def overtime_action(request, pk):
     from .models import OvertimeRecord
     ot = get_object_or_404(OvertimeRecord, pk=pk)

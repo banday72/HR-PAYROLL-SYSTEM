@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from employees.models import Employee, Department
-from employees.decorators import hr_required
+from employees.decorators import permission_required
 
 
 @login_required
@@ -78,7 +78,7 @@ def face_verify(request):
 
 
 @login_required
-@hr_required
+@permission_required('manage_faces')
 def face_manage_list(request):
     employees = Employee.objects.filter(status='active').select_related('department', 'user').order_by('employee_id')
     search = request.GET.get('search', '')
@@ -112,6 +112,10 @@ def face_save_for_employee(request):
             emp_id = data.get('employee_id')
             face_descriptors = data.get('descriptors', [])
             employee = Employee.objects.get(employee_id=emp_id)
+            if not request.user.is_superuser:
+                from .permissions import permissions_for_user
+                if 'manage_faces' not in permissions_for_user(request.user):
+                    return JsonResponse({'status': 'error', 'message': 'Access denied.'}, status=403)
             employee.face_data = json.dumps(face_descriptors)
             employee.face_registered = True
             employee.save()
@@ -130,6 +134,10 @@ def face_remove_for_employee(request):
             data = json.loads(request.body)
             emp_id = data.get('employee_id')
             employee = Employee.objects.get(employee_id=emp_id)
+            if not request.user.is_superuser:
+                from .permissions import permissions_for_user
+                if 'manage_faces' not in permissions_for_user(request.user):
+                    return JsonResponse({'status': 'error', 'message': 'Access denied.'}, status=403)
             employee.face_data = ''
             employee.face_registered = False
             employee.save()

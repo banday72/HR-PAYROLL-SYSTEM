@@ -14,7 +14,8 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from .models import Department, Employee, AuditLog, LoginSlide, managers_queryset, chief_id_prefix, MANAGEMENT_DEPARTMENT_NAMES, default_password_for
 from .forms import DepartmentForm, EmployeeForm, ProfileForm, LoginSlideForm
-from .decorators import hr_required, privilege_required
+from .decorators import permission_required, hr_required, privilege_required
+from .permissions import permissions_for_user
 from .audit import log_audit
 
 
@@ -89,11 +90,10 @@ def dashboard(request):
         messages.warning(request, 'You must change your password before continuing.')
         return redirect('change_password')
 
-    is_hr = False
-    if employee and employee.is_hr:
-        is_hr = True
+    perms = permissions_for_user(request.user)
+    show_hr_dashboard = bool(perms & {'dashboard_hr', 'view_employees', 'manage_employees'})
 
-    if employee and not is_hr:
+    if employee and not show_hr_dashboard:
         today = date.today()
         my_attendance = Attendance.objects.filter(employee=employee, date=today).first()
         my_leaves = Leave.objects.filter(employee=employee).count()
@@ -107,6 +107,7 @@ def dashboard(request):
             'my_payrolls': my_payrolls,
             'is_employee': True,
             'is_hr': False,
+            'permissions': perms,
         }
     else:
         total_employees = Employee.objects.filter(status='active').count()
@@ -126,14 +127,15 @@ def dashboard(request):
             'pending_leaves': pending_leaves,
             'draft_payrolls': draft_payrolls,
             'is_employee': False,
-            'is_hr': is_hr,
+            'is_hr': bool(show_hr_dashboard),
             'today_birthdays': today_birthdays,
+            'permissions': perms,
         }
     return render(request, 'dashboard.html', context)
 
 
 @login_required
-@hr_required
+@permission_required('view_employees')
 def employee_list(request):
     employees = Employee.objects.select_related('department', 'reports_to').all()
     search = request.GET.get('search', '')
@@ -175,10 +177,15 @@ def employee_list(request):
 def employee_detail(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     current_employee = get_employee(request.user)
-    is_hr = current_employee.is_hr if current_employee else request.user.is_superuser
+    perms = permissions_for_user(request.user)
+    is_self = current_employee is not None and current_employee.pk == employee.pk
+    if not is_self and not (perms & {'view_employees', 'manage_employees'}):
+        messages.error(request, 'Access denied. You can only view your own profile.')
+        return redirect('dashboard')
     return render(request, 'employees/employee_detail.html', {
         'employee': employee,
-        'is_hr': is_hr,
+        'is_hr': bool(perms & {'view_employees', 'manage_employees'}),
+        'can_manage_employees': bool(perms & {'manage_employees'}),
     })
 
 
@@ -198,9 +205,6 @@ def my_manager(request):
     employee = get_employee(request.user)
     if not employee:
         messages.error(request, 'No employee profile is linked to your account.')
-        return redirect('dashboard')
-    if not (employee.is_authorized or employee.role in ('hr', 'manager')):
-        messages.error(request, 'Your account is not authorized yet. Ask HR to authorize you first.')
         return redirect('dashboard')
 
     managers = managers_queryset().exclude(pk=employee.pk)
@@ -250,7 +254,7 @@ def my_manager(request):
 
 
 @login_required
-@hr_required
+@permission_required('manage_employees')
 def employee_create(request):
     if request.method == 'POST':
         form = EmployeeForm(request.POST, request.FILES, user=request.user)
@@ -291,7 +295,7 @@ def next_employee_id(request):
 
 
 @login_required
-@hr_required
+@permission_required('manage_employees')
 def employee_update(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
@@ -310,7 +314,7 @@ def employee_update(request, pk):
 
 
 @login_required
-@hr_required
+@permission_required('manage_employees')
 def employee_delete(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
@@ -327,14 +331,14 @@ def employee_delete(request, pk):
 
 
 @login_required
-@hr_required
+@permission_required('manage_departments')
 def department_list(request):
     departments = Department.objects.all()
     return render(request, 'employees/department_list.html', {'departments': departments})
 
 
 @login_required
-@hr_required
+@permission_required('manage_departments')
 def department_create(request):
     if request.method == 'POST':
         form = DepartmentForm(request.POST)
@@ -350,7 +354,7 @@ def department_create(request):
 
 
 @login_required
-@hr_required
+@permission_required('manage_departments')
 def department_update(request, pk):
     department = get_object_or_404(Department, pk=pk)
     if request.method == 'POST':
@@ -367,7 +371,7 @@ def department_update(request, pk):
 
 
 @login_required
-@hr_required
+@permission_required('manage_departments')
 def department_delete(request, pk):
     department = get_object_or_404(Department, pk=pk)
     if request.method == 'POST':
@@ -403,7 +407,7 @@ def change_password(request):
 
 
 @login_required
-@privilege_required
+@permission_required('manage_access')
 def authorized_users(request):
     employees = Employee.objects.select_related('user', 'department').all()
     search = request.GET.get('search', '')
@@ -438,7 +442,7 @@ def authorized_users(request):
 
 
 @login_required
-@privilege_required
+@permission_required('manage_access')
 def toggle_authorize(request, pk):
     employee = get_object_or_404(Employee, pk=pk)
     if request.method == 'POST':
@@ -474,9 +478,10 @@ def toggle_authorize(request, pk):
 
 
 @login_required
+@permission_required('approve_access')
 def pending_approvals(request):
     employee = get_employee(request.user)
-    is_manager = request.user.is_superuser or (employee and (employee.role == 'manager' or employee.is_chief))
+    is_manager = request.user.is_superuser or permissions_for_user(request.user) & {'approve_access'}
     if not is_manager:
         messages.error(request, 'Only Managers can access this page.')
         return redirect('dashboard')
@@ -502,9 +507,10 @@ def pending_approvals(request):
 
 
 @login_required
+@permission_required('approve_access')
 def manager_approve(request, pk):
     employee_obj = get_employee(request.user)
-    is_manager = request.user.is_superuser or (employee_obj and (employee_obj.role == 'manager' or employee_obj.is_chief))
+    is_manager = request.user.is_superuser or permissions_for_user(request.user) & {'approve_access'}
     if not is_manager:
         messages.error(request, 'Only Managers can approve authorizations.')
         return redirect('dashboard')
@@ -538,7 +544,7 @@ def manager_approve(request, pk):
 
 
 @login_required
-@privilege_required
+@permission_required('manage_slides')
 def login_slide_list(request):
     slides = LoginSlide.objects.all()
     if request.method == 'POST':
@@ -566,7 +572,7 @@ def login_slide_list(request):
 
 
 @login_required
-@privilege_required
+@permission_required('manage_slides')
 def login_slide_delete(request, pk):
     slide = get_object_or_404(LoginSlide, pk=pk)
     if request.method == 'POST':
@@ -579,7 +585,7 @@ def login_slide_delete(request, pk):
 
 
 @login_required
-@privilege_required
+@permission_required('manage_slides')
 def login_slide_toggle(request, pk):
     slide = get_object_or_404(LoginSlide, pk=pk)
     if request.method == 'POST':
@@ -593,7 +599,7 @@ def login_slide_toggle(request, pk):
 
 
 @login_required
-@privilege_required
+@permission_required('bulk_import')
 def bulk_import_employees(request):
     if request.method == 'POST' and request.FILES.get('csv_file'):
         csv_file = request.FILES['csv_file']
@@ -686,7 +692,7 @@ def bulk_import_employees(request):
 
 
 @login_required
-@privilege_required
+@permission_required('view_audit')
 def audit_log_list(request):
     logs = AuditLog.objects.select_related('user').all()
     search = request.GET.get('search', '')

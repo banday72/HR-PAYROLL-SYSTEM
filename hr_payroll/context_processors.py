@@ -1,5 +1,10 @@
 def role_context(request):
-    context = {'is_hr': False, 'current_employee': None, 'ceo_employee': None, 'current_manager': None, 'unread_notif_count': 0}
+    from employees.permissions import permissions_for_user, Perms, permission_group
+    context = {
+        'is_hr': False, 'current_employee': None, 'ceo_employee': None,
+        'current_manager': None, 'unread_notif_count': 0,
+        'permissions': set(), 'can': Perms(set()), 'permission_group': 'employee',
+    }
     if request.user.is_authenticated:
         from employees.models import Employee
 
@@ -10,14 +15,20 @@ def role_context(request):
             pass
 
         try:
-            emp = Employee.objects.get(user=request.user)
-            context['current_employee'] = emp
-            context['is_hr'] = emp.is_hr or emp.employee_id == 'CEO001'
+            perms = permissions_for_user(request.user)
+            context['permissions'] = perms
+            context['can'] = Perms(perms)
+            context['permission_group'] = permission_group(request.user.employee)
+            emp = context['current_employee'] = request.user.employee
+            context['is_hr'] = bool(perms & {'dashboard_hr', 'view_employees', 'manage_employees'})
             if emp.reports_to:
                 context['current_manager'] = emp.reports_to
         except Employee.DoesNotExist:
             if request.user.is_superuser:
                 context['is_hr'] = True
+                context['permission_group'] = 'superuser'
+                context['permissions'] = permissions_for_user(request.user)
+                context['can'] = Perms(context['permissions'])
 
         try:
             from hr_modules.models import Notification
