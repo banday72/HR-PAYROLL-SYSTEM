@@ -18,6 +18,29 @@
     </div>
 </div>
 
+{% if is_employee and balances %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-white fw-bold"><i class="fas fa-calendar-check me-1"></i> My Leave Balance — {{ year }}</div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for balance in balances %}
+            <div class="col-6 col-md-3">
+                <div class="border rounded p-3 text-center h-100">
+                    <div class="small text-muted">{{ balance.leave_type.name }}</div>
+                    <div class="h3 mb-0">{{ balance.remaining }}<span class="fs-6 text-muted">/{{ balance.allocated }}</span></div>
+                    <div class="small text-muted">{{ balance.used }} used</div>
+                    <div class="progress mt-2" style="height:6px">
+                        <div class="progress-bar {% if balance.remaining == 0 %}bg-danger{% elif balance.remaining <= 3 %}bg-warning{% else %}bg-success{% endif %}"
+                             style="width:{% widthratio balance.used balance.allocated 100 %}%"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="card shadow">
     <div class="card-body">
         <div class="table-responsive">

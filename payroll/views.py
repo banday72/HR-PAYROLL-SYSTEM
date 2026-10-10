@@ -255,6 +255,12 @@ def payroll_process(request, pk):
         payroll.status = 'processed'
         payroll.payment_date = datetime.now().date()
         payroll.save()
+        from hr_modules.notify import notify
+        notify(payroll.employee,
+               'Payroll processed',
+               f'Your salary for {payroll.get_month_display()} {payroll.year} '
+               f'has been processed (Net: ${payroll.net_salary}).',
+               'success', 'salary_slip')
         messages.success(request, 'Payroll processed successfully.')
         return redirect('payroll_list')
     return render(request, 'payroll/payroll_confirm_process.html', {'payroll': payroll})

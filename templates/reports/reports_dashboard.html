@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load reports_filters %}
+{% block title %}Reports & Analytics{% endblock %}
+{% block page_title %}Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="card shadow h-100"><div class="card-body text-center">
+            <div class="text-muted small">Active Employees</div>
+            <div class="h3 mb-0">{{ active_count }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card shadow h-100"><div class="card-body text-center">
+            <div class="text-muted small">Avg Salary</div>
+            <div class="h3 mb-0">${{ avg_salary }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card shadow h-100"><div class="card-body text-center">
+            <div class="text-muted small">Payroll (6 Months)</div>
+            <div class="h3 mb-0">${{ month_total }}</div>
+        </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card shadow h-100"><div class="card-body text-center">
+            <div class="text-muted small">Pending Leaves</div>
+            <div class="h3 mb-0">{{ pending_leaves }} <span class="fs-6 text-muted">{{ approved_leave_days }} days approved</span></div>
+        </div></div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="card shadow h-100">
+            <div class="card-header bg-white fw-bold"><i class="fas fa-users me-1"></i> Headcount by Department</div>
+            <div class="card-body"><canvas id="headcountChart" height="140"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow h-100">
+            <div class="card-header bg-white fw-bold"><i class="fas fa-dollar-sign me-1"></i> Salary Cost by Department</div>
+            <div class="card-body"><canvas id="salaryChart" height="140"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="card shadow h-100">
+            <div class="card-header bg-white fw-bold"><i class="fas fa-chart-line me-1"></i> Payroll Cost by Month (6 months)</div>
+            <div class="card-body"><canvas id="payrollChart" height="150"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-white fw-bold"><i class="fas fa-calendar-minus me-1"></i> Approved Leaves by Type</div>
+            <div class="card-body"><canvas id="leaveChart" height="150"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header bg-white fw-bold"><i class="fas fa-calendar-check me-1"></i> Attendance Trend (14 days)</div>
+            <div class="card-body"><canvas id="attendanceChart" height="120"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card shadow h-100">
+            <div class="card-header bg-white fw-bold"><i class="fas fa-cake-candles me-1"></i> Upcoming Birthdays (30 days)</div>
+            <ul class="list-group list-group-flush">
+                {% for b in birthdays %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ b.name }}</strong>
+                        <span class="text-muted small">({{ b.employee_id }})</span>
+                        {% if b.department %} <span class="badge bg-secondary">{{ b.department }}</span>{% endif %}
+                    </div>
+                    <span class="badge {% if b.today %}bg-danger{% else %}bg-primary{% endif %}">
+                        {% if b.today %}Today!{% else %}in {{ b.days }} day{{ b.days|pluralize }}{% endif %}
+                    </span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No birthdays in the next 30 days.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow h-100">
+            <div class="card-header bg-white fw-bold"><i class="fas fa-trophy me-1"></i> Top Earners</div>
+            <ul class="list-group list-group-flush">
+                {% for e in top_earners %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ e.first_name }} {{ e.last_name }}</strong>
+                        <span class="text-muted small">({{ e.employee_id }})</span> -
+                        <span class="text-muted">{{ e.designation }}</span>
+                    </div>
+                    <span class="fw-bold">${{ e.salary }}</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No employees yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    Chart.defaults.font.family = 'Segoe UI, Tahoma, sans-serif';
+    Chart.defaults.color = '#5d6d7e';
+
+    new Chart(document.getElementById('headcountChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ headcount|slice:':10'|map_label|safe }},
+            datasets: [{ label: 'Employees', data: {{ headcount|slice:':10'|map_value|safe }}, backgroundColor: '#2980b9' }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    new Chart(document.getElementById('salaryChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ salary_cost|slice:':10'|map_label|safe }},
+            datasets: [{ label: 'Salary Cost', data: {{ salary_cost|slice:':10'|map_value|safe }}, backgroundColor: '#27ae60' }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    new Chart(document.getElementById('payrollChart'), {
+        type: 'line',
+        data: {
+            labels: {{ payroll_months|map_label|safe }},
+            datasets: [{ label: 'Net Paid', data: {{ payroll_months|map_value|safe }}, borderColor: '#1a5276', backgroundColor: 'rgba(26,82,118,.15)', fill: true, tension: .3 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    new Chart(document.getElementById('leaveChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ leaves_by_type|map_label|safe }},
+            datasets: [{ data: {{ leaves_by_type|map_value|safe }}, backgroundColor: ['#2980b9', '#27ae60', '#f39c12', '#8e44ad', '#e74c3c', '#16a085'] }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    new Chart(document.getElementById('attendanceChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ attendance_trend|map_label|safe }},
+            datasets: [
+                { label: 'Present', data: {{ attendance_trend|map_attr_present|safe }}, backgroundColor: '#27ae60' },
+                { label: 'Absent', data: {{ attendance_trend|map_attr_absent|safe }}, backgroundColor: '#e74c3c' },
+                { label: 'Half day', data: {{ attendance_trend|map_attr_half|safe }}, backgroundColor: '#f39c12' }
+            ]
+        },
+        options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+})();
+</script>
+{% endblock %}

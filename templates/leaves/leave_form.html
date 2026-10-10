@@ -4,7 +4,9 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-6">
+    <div class="col-lg-8">
+        <div class="row g-3">
+            <div class="col-lg-7">
         <div class="card shadow">
             <div class="card-body">
                 <form method="post">
@@ -24,6 +26,23 @@
                     </div>
                 </form>
             </div>
+        </div>
+            </div>
+            {% if balances %}
+            <div class="col-lg-5">
+                <div class="card shadow">
+                    <div class="card-header bg-white fw-bold">Your Balance</div>
+                    <ul class="list-group list-group-flush">
+                        {% for balance in balances %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>{{ balance.leave_type.name }}</span>
+                            <span class="fw-bold">{{ balance.remaining }}<span class="text-muted fw-normal">/{{ balance.allocated }}</span></span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

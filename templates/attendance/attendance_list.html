@@ -80,7 +80,12 @@
 
 <div class="d-flex justify-content-between mb-3">
     <h6 class="text-muted">Total Records: {{ attendance|length }}</h6>
-    <a href="{% url 'attendance_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Mark Attendance</a>
+    <div>
+        {% if can.manage_attendance %}
+        <a href="{% url 'export_attendance_csv' %}" class="btn btn-outline-secondary"><i class="fas fa-download"></i> Export</a>
+        {% endif %}
+        <a href="{% url 'attendance_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Mark Attendance</a>
+    </div>
 </div>
 
 <div class="card shadow">
