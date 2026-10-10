@@ -20,4 +20,4 @@ if not link.token:
 print(f"\nPublic payslip link for EMP001 ({emp.first_name} {emp.last_name}):")
 print(f"Token: {link.token}")
 print(f"\nURL: /payroll/p/EMP001/{link.token}/")
-print(f"\nFull URL (Vercel): https://core-cloud.vercel.app/payroll/p/EMP001/{link.token}/")
+print(f"\nFull URL (Vercel): https://corecloud.vercel.app/payroll/p/EMP001/{link.token}/")

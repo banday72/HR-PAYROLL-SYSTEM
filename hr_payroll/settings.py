@@ -22,6 +22,7 @@ DEBUG = os.environ.get('DEBUG', '') == 'True'
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
+    'https://corecloud.vercel.app',
     'https://core-cloud.vercel.app',
     'https://hr-payroll-system-one.vercel.app',
     'https://banday72-hr-payroll-system.vercel.app',
