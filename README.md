@@ -28,14 +28,24 @@ git push -u origin main
 4. Import your GitHub repository
 5. Click "Deploy"
 
-### Step 3: Set Environment Variables (Optional)
-- `DEBUG` = `True` (for development)
-- `SECRET_KEY` = your secret key
+### Step 3: Set Environment Variables
+Set these in your Vercel project settings (and never commit them to Git):
+
+| Variable | Purpose |
+| --- | --- |
+| `SECRET_KEY` | Django secret key (generate one and keep it secret) |
+| `DEBUG` | `False` in production |
+| `DATABASE_URL` | Full Postgres connection string, e.g. `postgres://user:pass@host/db` |
+| `SEED_DEMO` | `True` only to load the demo org chart once |
+
+Optional but recommended for password reset emails:
+`EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL`.
+
+> Rotate any database password that has ever been committed to a public repository.
 
 ### Step 4: Access Your Site
 - Your site will be at: `https://your-project.vercel.app`
-- Login: `admin` / `admin123`
-- Employee login: `EMP001` / `employee123`
+- Any active employee can log in with their `employee_id` / default password (they are prompted to change it on first login).
 
 ## Local Development
 ```bash

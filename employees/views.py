@@ -275,7 +275,7 @@ def employee_create(request):
             emp.save()
             log_audit(user=request.user, action='create', model_name='Employee',
                       object_id=emp.employee_id, description=f'Created employee {emp.full_name}', request=request)
-            messages.success(request, f'Employee created. Login: {emp.employee_id} / {default_password_for(emp.employee_id)}. Go to Authorized Users to grant login access.')
+            messages.success(request, f'Employee created. Login: {emp.employee_id} / {default_password_for(emp.employee_id)}. They must change their password on first login.')
             return redirect('employee_list')
     else:
         form = EmployeeForm(user=request.user)

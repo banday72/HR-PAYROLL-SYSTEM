@@ -13,9 +13,11 @@ try:
 except ImportError:
     pass
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-pvtx-a7-_+*1kz%yr5(@2wxv(f^t0b_h4n-q87ye+9&j9qb+bm')
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-pvtx-a7-_+*1kz%yr5(@2wxv(f^t0b_h4n-q87ye+9&j9qb+bm')
 
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', '') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -71,8 +73,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hr_payroll.wsgi.application'
 
-DATABASES = {
-    'default': {
+DATABASES = {}
+if os.environ.get('DATABASE_URL'):
+    import dj_database_url
+    DATABASES['default'] = dj_database_url.parse(
+        os.environ['DATABASE_URL'], conn_max_age=600)
+else:
+    DATABASES['default'] = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DB_NAME', 'neondb'),
         'USER': os.environ.get('DB_USER', 'neondb_owner'),
@@ -83,7 +90,6 @@ DATABASES = {
             'sslmode': 'require',
         },
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -91,8 +97,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-
-LOGIN_REDIRECT_URL = '/face-verify/'
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -117,7 +121,17 @@ AUTHENTICATION_BACKENDS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+if os.environ.get('EMAIL_HOST') and os.environ.get('EMAIL_HOST_USER'):
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ['EMAIL_HOST']
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False') == 'True'
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
