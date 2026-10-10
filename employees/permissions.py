@@ -36,6 +36,8 @@ ALL_PERMISSIONS = {
     'view_all_overtime',
     'approve_travel',
     'approve_overtime',
+    'approve_networks',
+    'manage_networks',
 }
 
 HR_PERMISSIONS = set(ALL_PERMISSIONS)
@@ -56,6 +58,7 @@ MANAGER_PERMISSIONS = {
     'view_all_overtime',
     'approve_travel',
     'approve_overtime',
+    'approve_networks',
 }
 
 EMPLOYEE_PERMISSIONS = set()

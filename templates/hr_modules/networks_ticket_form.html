@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Raise IT &amp; Networks Ticket{% endblock %}
+{% block page_title %}<i class="fas fa-network-wired me-2"></i>Raise IT/Networks Ticket{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-ticket-alt me-1"></i> Ticket Details</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Category <span class="text-danger">*</span></label>
+                        <select name="category" class="form-select" required>
+                            <option value="networks">Networks / Connectivity</option>
+                            <option value="software">Software</option>
+                            <option value="hardware">Hardware</option>
+                            <option value="peripherals">Printers / Peripherals</option>
+                            <option value="email">Email / Accounts</option>
+                            <option value="security">Security / Access</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Priority <span class="text-danger">*</span></label>
+                        <select name="priority" class="form-select" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Subject <span class="text-danger">*</span></label>
+                        <input type="text" name="subject" class="form-control" placeholder="Brief issue description" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Description <span class="text-danger">*</span></label>
+                        <textarea name="description" class="form-control" rows="4" placeholder="Explain the issue in detail (location, device, IP, etc.)" required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'networks_ticket_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i> Submit Ticket</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -423,3 +423,123 @@ def overtime_action(request, pk):
         messages.success(request, f'Overtime {action}.')
         return redirect('overtime_list')
     return render(request, 'hr_modules/overtime_action.html', {'record': ot})
+
+
+# ============ IT & NETWORKS HELP DESK ============
+def notify_support_team(title, message, notif_type='info', link=''):
+    from employees.models import Employee
+    from employees.permissions import permission_group
+    for emp in Employee.objects.filter(status='active', user__isnull=False).exclude(role='employee'):
+        if permission_group(emp) in ('hr', 'executive'):
+            create_notification(emp, title, message, notif_type, link)
+
+
+@login_required
+def networks_ticket_list(request):
+    from employees.models import Employee
+    from .models import NetworkTicket
+    emp = Employee.objects.filter(user=request.user).first()
+    tickets = NetworkTicket.objects.none()
+    if emp:
+        if has_any_permission(request.user, 'manage_networks'):
+            tickets = NetworkTicket.objects.all()
+        elif has_any_permission(request.user, 'approve_networks'):
+            tickets = NetworkTicket.objects.filter(
+                employee__reports_to=emp) | NetworkTicket.objects.filter(employee=emp)
+        else:
+            tickets = NetworkTicket.objects.filter(employee=emp)
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        tickets = tickets.filter(status=status_filter)
+    return render(request, 'hr_modules/networks_ticket_list.html', {
+        'tickets': tickets, 'status_filter': status_filter,
+    })
+
+
+@login_required
+def networks_ticket_create(request):
+    from employees.models import Employee
+    from .models import NetworkTicket
+    emp = Employee.objects.filter(user=request.user).first()
+    if request.method == 'POST':
+        ticket = NetworkTicket.objects.create(
+            employee=emp,
+            category=request.POST.get('category', 'networks'),
+            priority=request.POST.get('priority', 'medium'),
+            subject=request.POST.get('subject'),
+            description=request.POST.get('description'),
+            status='pending' if emp and emp.reports_to else 'approved',
+        )
+        if emp and emp.reports_to:
+            create_notification(emp.reports_to, 'IT/Network Ticket',
+                f'{emp.first_name} {emp.last_name} raised ticket "{ticket.subject}"',
+                'warning', 'networks_ticket_list')
+        else:
+            notify_support_team('IT/Network Ticket',
+                f'New ticket "{ticket.subject}" from {emp} - no manager to approve.',
+                'warning', 'networks_ticket_list')
+        messages.success(request, 'Ticket submitted. Your manager will review it.')
+        return redirect('networks_ticket_list')
+    return render(request, 'hr_modules/networks_ticket_form.html')
+
+
+@login_required
+def networks_ticket_detail(request, pk):
+    from .models import NetworkTicket
+    ticket = get_object_or_404(NetworkTicket, pk=pk)
+    from employees.models import Employee
+    emp = Employee.objects.filter(user=request.user).first()
+    can_approve = has_any_permission(request.user, 'approve_networks')
+    can_manage = has_any_permission(request.user, 'manage_networks')
+    is_owner = bool(emp) and ticket.employee_id == emp.pk
+    if not (can_manage or can_approve or is_owner):
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+    return render(request, 'hr_modules/networks_ticket_detail.html', {
+        'ticket': ticket,
+        'can_approve': can_approve,
+        'can_manage': can_manage,
+        'is_owner': is_owner,
+        'emp': emp,
+    })
+
+
+@login_required
+def networks_ticket_action(request, pk):
+    from employees.models import Employee
+    from .models import NetworkTicket
+    ticket = get_object_or_404(NetworkTicket, pk=pk)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        reviewer = Employee.objects.filter(user=request.user).first()
+        if action in ('approved', 'rejected'):
+            if not has_any_permission(request.user, 'approve_networks'):
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied
+            ticket.status = action
+            ticket.approved_by = reviewer
+            ticket.save()
+            create_notification(ticket.employee, f'Ticket {action.title()}',
+                f'Your ticket "{ticket.subject}" was {action} by {reviewer}.',
+                'success' if action == 'approved' else 'danger', 'networks_ticket_list')
+            if action == 'approved':
+                notify_support_team('IT/Network Ticket',
+                    f'Ticket "{ticket.subject}" from {ticket.employee.employee_id} needs your attention.',
+                    'info', 'networks_ticket_list')
+            messages.success(request, f'Ticket {action}.')
+        elif action in ('in_progress', 'resolved'):
+            if not has_any_permission(request.user, 'manage_networks'):
+                from django.core.exceptions import PermissionDenied
+                raise PermissionDenied
+            ticket.status = action
+            ticket.resolved_by = reviewer if action == 'resolved' else ticket.resolved_by
+            if action == 'resolved':
+                ticket.resolution_notes = request.POST.get('resolution_notes', '')
+            ticket.save()
+            create_notification(ticket.employee, f'Ticket {action.title().replace("_", " ")}',
+                f'Your ticket "{ticket.subject}" is now {action.replace("_", " ")}.'
+                + (f' Notes: {ticket.resolution_notes}' if ticket.resolution_notes else ''),
+                'success' if action == 'resolved' else 'info', 'networks_ticket_list')
+            messages.success(request, f'Ticket marked {action.replace("_", " ")}.')
+        return redirect('networks_ticket_list')
+    return redirect('networks_ticket_detail', pk=ticket.pk)

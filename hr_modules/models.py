@@ -166,6 +166,48 @@ class TravelRequest(models.Model):
         ordering = ['-created_at']
 
 
+class NetworkTicket(models.Model):
+    CATEGORY_CHOICES = [
+        ('networks', 'Networks / Connectivity'),
+        ('software', 'Software'),
+        ('hardware', 'Hardware'),
+        ('peripherals', 'Printers / Peripherals'),
+        ('email', 'Email / Accounts'),
+        ('security', 'Security / Access'),
+        ('other', 'Other'),
+    ]
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('urgent', 'Urgent'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending Approval'),
+        ('approved', 'Open (IT & Networks)'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
+        ('rejected', 'Rejected'),
+    ]
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='network_tickets')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='networks')
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
+    subject = models.CharField(max_length=200)
+    description = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    approved_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='network_tickets_approved')
+    resolved_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='network_tickets_resolved')
+    resolution_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"#{self.pk} {self.subject} - {self.get_status_display()}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
 class OvertimeRecord(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),

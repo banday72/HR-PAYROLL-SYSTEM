@@ -1,0 +1,43 @@
+{
+	"folders": [
+		{
+			"path": "../employees"
+		},
+		{
+			"path": "../templates"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../hr_payroll"
+		},
+		{
+			"path": "../staticfiles"
+		},
+		{
+			"path": "../static"
+		},
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../vercel_app"
+		},
+		{
+			"path": "../media"
+		},
+		{
+			"path": "../attendance"
+		},
+		{
+			"path": "../leaves"
+		},
+		{
+			"path": "../payroll"
+		},
+		{
+			"path": "../venv"
+		}
+	]
+}
