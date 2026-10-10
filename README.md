@@ -1,6 +1,6 @@
-# HR Payroll System
+# CoreCloud
 
-A complete HR Payroll System built with Django.
+A complete HR &amp; Payroll portal built with Django.
 
 ## Features
 - Employee management (add, edit, delete)
